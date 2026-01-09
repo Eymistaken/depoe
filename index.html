@@ -498,7 +498,9 @@
             inventory: [],
             currentUnit: null,
             history: [],
-            gameOver: false
+            gameOver: false,
+            eoPatience: 4, // Max 4 per round
+            negotiationMemory: {} // Remembers offers per item
         };
 
         // --- DOM ELEMENTS ---
@@ -538,6 +540,8 @@
 
         function startRound() {
             gameState.availableUnits = generateStorageUnits();
+            gameState.eoPatience = 4;
+            gameState.negotiationMemory = {};
 
             // Check for Game Over (Bankruptcy)
             // If the player cannot afford the cheapest unit, they are done.
@@ -734,35 +738,66 @@
 
         window.initNegotiation = function(itemId) {
             const item = gameState.inventory.find(i => i.id === itemId);
-            let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
-            let startDialogue = "Ooo, bunu mu satıyorsun? Bakalım kaç para eder...";
 
-            // Logic for rare/uncertified items
-            if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
-                initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
-                startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
-            } else if (item.certified) {
-                 initialOffer = Math.floor(initialOffer * 1.5); // Better offer
-                 startDialogue = "Belgesi var demek... Güzel. O zaman ciddi konuşalım.";
+            // Check Memory
+            if (gameState.negotiationMemory[itemId]) {
+                const mem = gameState.negotiationMemory[itemId];
+                negotiationState = {
+                    item: item,
+                    currentOffer: mem.offer,
+                    status: 'active',
+                    dialogue: mem.dialogue || "Kaldığımız yerden devam edelim."
+                };
+            } else {
+                let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
+                let startDialogue = "Ooo, bunu mu satıyorsun? Bakalım kaç para eder...";
+
+                // Logic for rare/uncertified items
+                if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
+                    initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
+                    startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                } else if (item.certified) {
+                     initialOffer = Math.floor(initialOffer * 1.5); // Better offer
+                     startDialogue = "Belgesi var demek... Güzel. O zaman ciddi konuşalım.";
+                }
+
+                negotiationState = {
+                    item: item,
+                    currentOffer: initialOffer,
+                    status: 'active', // active, sold, failed
+                    lastMove: 'start',
+                    dialogue: startDialogue
+                };
+
+                // Save immediately
+                saveNegotiationState();
             }
-
-            negotiationState = {
-                item: item,
-                currentOffer: initialOffer,
-                eoPatience: EO_AI.patience,
-                status: 'active', // active, sold, failed
-                lastMove: 'start',
-                dialogue: startDialogue
-            };
 
             renderNegotiation();
         };
+
+        function saveNegotiationState() {
+            if (negotiationState && negotiationState.item) {
+                gameState.negotiationMemory[negotiationState.item.id] = {
+                    offer: negotiationState.currentOffer,
+                    dialogue: negotiationState.dialogue
+                };
+            }
+        }
 
         function renderNegotiation() {
             const state = negotiationState;
             const item = state.item;
             const rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
             const playerKnowsValue = item.certified;
+
+            // Patience Visualization
+            let patienceHtml = '';
+            for(let i=0; i<4; i++) {
+                patienceHtml += (i < gameState.eoPatience) ? '🔴 ' : '⚪ ';
+            }
+
+            const patienceLow = gameState.eoPatience <= 0;
 
             ui.app.innerHTML = `
                 <div class="screen screen-glass" style="max-width:1000px; padding:0;">
@@ -771,6 +806,9 @@
                         <div class="eo-avatar-container">
                              <div class="eo-avatar">👺</div>
                              <div class="speech-bubble">"${state.dialogue}"</div>
+                             <div style="margin-top:10px; font-size:1.2rem; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:10px;">
+                                SABIR: ${patienceHtml}
+                             </div>
                         </div>
 
                         <div class="negotiation-desk">
@@ -783,9 +821,9 @@
 
                             <div class="desk-actions">
                                 <button class="btn" onclick="actionAccept()">✅ KABUL (${state.currentOffer} ₺)</button>
-                                <button class="btn" onclick="showCounterInput()">💬 PAZARLIK</button>
-                                <button class="btn btn-purple" onclick="actionBluff()">🎲 BLÖF</button>
-                                <button class="btn btn-danger" onclick="actionThreaten()">🤬 TEHDİT</button>
+                                <button class="btn" onclick="showCounterInput()" ${patienceLow ? 'disabled' : ''}>💬 PAZARLIK</button>
+                                <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow ? 'disabled' : ''}>🎲 BLÖF</button>
+                                <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow ? 'disabled' : ''}>🤬 TEHDİT</button>
                                 <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()">❌ VAZGEÇ</button>
                             </div>
                         </div>
@@ -798,10 +836,12 @@
             // Sell item
             gameState.money += negotiationState.currentOffer;
 
-            // Log logic could be here
-
             // Remove item
             gameState.inventory = gameState.inventory.filter(i => i.id !== negotiationState.item.id);
+            // Clear from memory as it's sold
+            if (gameState.negotiationMemory[negotiationState.item.id]) {
+                delete gameState.negotiationMemory[negotiationState.item.id];
+            }
 
             // Reputation small boost for easy deal
             changeReputation(1);
@@ -812,6 +852,7 @@
         };
 
         window.actionCancel = function() {
+            saveNegotiationState();
             negotiationState = null;
             renderShop();
         };
@@ -875,14 +916,15 @@
                     const middleGround = Math.floor((state.currentOffer + playerOffer) / 2);
                     state.currentOffer = middleGround;
                     state.dialogue = "Çok istiyorsun. Şurada buluşalım.";
-                    state.eoPatience -= 1;
+                    gameState.eoPatience -= 1;
                 }
             } else {
                 // Insultingly high
                 state.dialogue = EO_AI.getLine('reject');
-                state.eoPatience -= 1;
+                gameState.eoPatience -= 1;
             }
 
+            saveNegotiationState();
             checkPatience();
             renderNegotiation();
         }
@@ -900,9 +942,10 @@
             } else {
                 // Fail
                 state.dialogue = "Kimi kandırıyorsun sen? Bu numara bana sökmez.";
-                state.eoPatience -= 2;
+                gameState.eoPatience -= 2;
                 changeReputation(-5);
             }
+            saveNegotiationState();
             checkPatience();
             renderNegotiation();
         };
@@ -919,20 +962,26 @@
             } else {
                 // Fail: EO ends negotiation
                 state.dialogue = "Defol dükkanımdan!";
-                state.eoPatience = 0;
+                gameState.eoPatience = 0;
             }
+            saveNegotiationState();
             checkPatience();
             renderNegotiation();
         };
 
         function checkPatience() {
-            if (negotiationState.eoPatience <= 0) {
+            if (gameState.eoPatience <= 0) {
                 // Force sell at low price or kick out?
                 // For now, let's say he forces the last offer or kicks out.
                 // Let's make him withdraw the offer and offer a pity amount (scrap value).
                 negotiationState.dialogue = "Sabrımı taşırdın. Ya bu fiyata alırsın ya da defolursun.";
-                negotiationState.currentOffer = Math.floor(negotiationState.item.baseValue * 0.1); // 10% scrap value
-                // Lock buttons maybe? For simplicity, we just set the offer low and let player accept/leave.
+                // Don't nuke the offer completely to 0, just leave it as last offer, but he refuses to negotiate more.
+                // Reverting logic: "eşyalara verdiği son teklifi ... sıfırlanmasın"
+                // But if he gets angry, does he lower it?
+                // The prompt says: "eşyalara verdiği son teklifi ve sabrı vazgeç tuşuna tıklayınca sıfırlanmasın"
+                // It doesn't explicitly say we can't lower it on failed negotiations.
+                // But usually "Sabrımı taşırdın" means take it or leave it.
+                // I will keep the current offer but prevent further actions (handled in renderNegotiation via disabled buttons).
             }
         }
 
@@ -964,9 +1013,10 @@
             updateHeader();
 
             // Generate items
-            gameState.inventory = generateItemsForUnit(unit);
+            const newItems = generateItemsForUnit(unit);
+            gameState.inventory.push(...newItems);
 
-            revealItems();
+            revealItems(newItems);
         };
 
         function generateItemsForUnit(unit) {
@@ -1009,8 +1059,8 @@
             return items;
         }
 
-        function revealItems() {
-            const listHtml = gameState.inventory.map(item => {
+        function revealItems(newItems) {
+            const listHtml = newItems.map(item => {
                 let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
                 return `
                 <div class="item-row rarity-${item.type}">
