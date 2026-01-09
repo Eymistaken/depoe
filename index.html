@@ -440,31 +440,91 @@
             patience: 3, // Lowers with bad offers
 
             dialogue: {
-                greeting: [
-                    "Ooo, yine mi sen? Bakalım bugün ne getirdin.",
-                    "Hoş geldin. Umarım vakit harcamaya değecek şeyler vardır.",
-                    "Çabuk ol, başka işlerim de var."
-                ],
-                inspecting: [
-                    "Hımm... Şuna bir bakalım.",
-                    "Bunun ne olduğunu bildiğine emin misin?",
-                    "İlginç... ama satılır mı emin değilim."
-                ],
-                lowball: [
-                    "Buna en fazla bu kadar veririm. İşine gelirse.",
-                    "Bak, bu piyasada bundan fazlasını bulamazsın.",
-                    "Sırf senin hatırına bu fiyatı veriyorum."
-                ],
-                accept: [
-                    "Tamamdır, anlaştık.",
-                    "Güzel, ver bakalım.",
-                    "Hah, sonunda mantıklı bir karar verdin."
-                ],
-                reject: [
-                    "Dalga mı geçiyorsun? Git işine.",
-                    "Bu fiyatla ancak kendini kandırırsın.",
-                    "Benimle oyun oynama evlat."
-                ],
+                greeting: {
+                    friendly: [
+                        "Ooo, benim favori tüccarım gelmiş! Yine mi beni batırmaya çalışacaksın, yoksa bu sefer gerçekten işe yarar bir şeyin var mı?",
+                        "Hoş geldin dostum! Bakalım bugün hangi 'şahane' malları itelemeye çalışacaksın?",
+                        "Gözüm yollarda kaldı. Hadi göster bakalım, bugün beni nasıl kandıracaksın?"
+                    ],
+                    neutral: [
+                        "Hoş geldin. Bakalım bugün ne getirdin.",
+                        "Umarım vakit harcamaya değecek şeyler vardır.",
+                        "Dükkan açık, ama sabrım sınırlı. Göster bakalım."
+                    ],
+                    suspicious: [
+                        "Yine mi sen? Çabuk ol, fazla vaktim yok.",
+                        "Sadece bakıyorum, söz vermem. Şüpheli bir şey görürsem polisi ararım.",
+                        "Kapıdan girmeden önce ayakkabılarını sildin mi? Ne istiyorsun?"
+                    ]
+                },
+                inspecting: {
+                    friendly: [
+                        "Bakalım bugün hangi hazineyi buldun?",
+                        "Bunu benim için mi sakladın? Hadi görelim.",
+                        "Güzel bir şeye benziyor, anlat bakalım."
+                    ],
+                    neutral: [
+                        "Hımm... Şuna bir bakalım.",
+                        "Bunun ne olduğunu bildiğine emin misin?",
+                        "İlginç... ama satılır mı emin değilim."
+                    ],
+                    suspicious: [
+                        "Ceplerini boşalt. Bu ne?",
+                        "Çalıntı mal almıyorum, baştan söyleyeyim.",
+                        "Hızlı ol, buna değer mi?"
+                    ]
+                },
+                lowball: {
+                    friendly: [
+                        "Yapma şimdi, dostuz diye kazıklayacak mısın beni?",
+                        "Seni severim ama cüzdanımı daha çok severim. Fiyat bu.",
+                        "Hadi ama, bu fiyata bana ver, hatırım kalır."
+                    ],
+                    neutral: [
+                        "Buna en fazla bu kadar veririm. İşine gelirse.",
+                        "Bak, bu piyasada bundan fazlasını bulamazsın.",
+                        "Piyasa durgun, teklifim bu."
+                    ],
+                    suspicious: [
+                        "Bu hurdaya bu fiyat çok bile. Al ya da git.",
+                        "Bunu başkasına satamazsın, dua et ben alıyorum.",
+                        "Sana bir iyilik yapıp bu parayı veriyorum, uzatma."
+                    ]
+                },
+                accept: {
+                    friendly: [
+                        "Hah şöyle! Seninle iş yapmayı bu yüzden seviyorum.",
+                        "Güzel anlaşma. Bir kahve de ısmarlayayım mı? Şaka şaka, git hadi.",
+                        "Tamamdır dostum, hayrını gör."
+                    ],
+                    neutral: [
+                        "Tamamdır, anlaştık.",
+                        "Makul. Al paranı.",
+                        "Güzel, ver bakalım."
+                    ],
+                    suspicious: [
+                        "Al paranı ve kaybol.",
+                        "Sonunda. Bir daha böyle pazarlık yapma.",
+                        "Tamam, şimdi git dükkanımdan."
+                    ]
+                },
+                reject: {
+                    friendly: [
+                        "Şakacı seni! Ama cidden, olmaz.",
+                        "Beni güldürdün, ama o fiyata imkansız dostum.",
+                        "Yok artık, o fiyata dükkanı da vereyim mi?"
+                    ],
+                    neutral: [
+                        "Dalga mı geçiyorsun? Git işine.",
+                        "Bu fiyatla ancak kendini kandırırsın.",
+                        "Benimle oyun oynama evlat."
+                    ],
+                    suspicious: [
+                        "Çık dışarı! Hemen!",
+                        "Seni ciddiye alanda kabahat. Defol.",
+                        "Sabrımı zorluyorsun yabancı."
+                    ]
+                },
                 threatResponse: [
                     "Beni tehdit etme, zararlı çıkarsın.",
                     "Cesaretini takdir ettim ama aptallığını değil.",
@@ -472,8 +532,18 @@
                 ]
             },
 
-            getLine: function(category) {
-                const lines = this.dialogue[category];
+            getLine: function(category, reputation) {
+                // If the category is threatResponse (array), return directly
+                if (Array.isArray(this.dialogue[category])) {
+                    const lines = this.dialogue[category];
+                    return lines[Math.floor(Math.random() * lines.length)];
+                }
+
+                let tier = 'neutral';
+                if (reputation > 70) tier = 'friendly';
+                else if (reputation < 30) tier = 'suspicious';
+
+                const lines = this.dialogue[category][tier];
                 return lines[Math.floor(Math.random() * lines.length)];
             },
 
@@ -482,9 +552,9 @@
                 // Base offer is 40-60% of real value
                 let percent = 0.4 + (Math.random() * 0.2);
 
-                // Reputation bonus (small)
-                if (reputation > 70) percent += 0.1;
-                if (reputation < 30) percent -= 0.1;
+                // Reputation bonus
+                if (reputation > 70) percent += 0.15; // Better offers for friends
+                if (reputation < 30) percent -= 0.15; // Worse for suspicious
 
                 return Math.floor(itemRealValue * percent);
             }
@@ -540,7 +610,12 @@
 
         function startRound() {
             gameState.availableUnits = generateStorageUnits();
-            gameState.eoPatience = 4;
+
+            // Determine Patience based on Reputation
+            if (gameState.reputation > 70) gameState.eoPatience = 4;
+            else if (gameState.reputation < 30) gameState.eoPatience = 2;
+            else gameState.eoPatience = 3;
+
             gameState.negotiationMemory = {};
 
             // Check for Game Over (Bankruptcy)
@@ -727,7 +802,7 @@
             ui.app.innerHTML = `
                 <div class="screen screen-glass">
                     <h2>🏪 EO'NUN DÜKKANI</h2>
-                    <p>EO: "${EO_AI.getLine('greeting')}"</p>
+                    <p>EO: "${EO_AI.getLine('greeting', gameState.reputation)}"</p>
                     <div class="item-list">
                         ${listHtml}
                     </div>
@@ -739,9 +814,18 @@
         window.initNegotiation = function(itemId) {
             const item = gameState.inventory.find(i => i.id === itemId);
 
-            // Check Memory
-            if (gameState.negotiationMemory[itemId]) {
-                const mem = gameState.negotiationMemory[itemId];
+            // Check Memory and handle "Return with Certificate" logic
+            let mem = gameState.negotiationMemory[itemId];
+
+            // Special case: Player certified the item AFTER a failed negotiation
+            // Logic: Memory exists, was NOT certified in memory, but IS certified now
+            if (mem && !mem.wasCertified && item.certified) {
+                 // Reset memory for this item effectively to allow re-pricing
+                 delete gameState.negotiationMemory[itemId];
+                 mem = null;
+            }
+
+            if (mem) {
                 negotiationState = {
                     item: item,
                     currentOffer: mem.offer,
@@ -749,16 +833,45 @@
                     dialogue: mem.dialogue || "Kaldığımız yerden devam edelim."
                 };
             } else {
+                // Determine dialogue tone based on reputation
+                let repTier = 'neutral';
+                if (gameState.reputation > 70) repTier = 'friendly';
+                else if (gameState.reputation < 30) repTier = 'suspicious';
+
                 let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
-                let startDialogue = "Ooo, bunu mu satıyorsun? Bakalım kaç para eder...";
+                let startDialogue = EO_AI.getLine('inspecting', gameState.reputation);
 
                 // Logic for rare/uncertified items
                 if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
                     initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
-                    startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                    if(repTier === 'friendly') {
+                        startDialogue = "Dostum bu çok değerli görünüyor ama sahteleri çok. Bir belgen var mı?";
+                    } else if (repTier === 'suspicious') {
+                         startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
+                    } else {
+                        startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                    }
                 } else if (item.certified) {
                      initialOffer = Math.floor(initialOffer * 1.5); // Better offer
-                     startDialogue = "Belgesi var demek... Güzel. O zaman ciddi konuşalım.";
+
+                     // Check if this is a "Return with Certificate" moment
+                     // We know it is because we cleared 'mem' above if it was a return.
+                     // But we want specific dialogue if it's a return.
+                     // A simple heuristic: If the offer is much higher than what it would be uncertified.
+                     // Better: Just check if we had memory before we cleared it? No, too late.
+                     // Let's rely on standard certified lines, OR add a flag.
+
+                     if (gameState.negotiationMemory[itemId] === undefined) {
+                         // It could be a fresh item OR a cleared memory item.
+                         // We can't easily distinguish without more state.
+                         // But we can say "Belgeletmişsin" generally if it is certified.
+
+                         if(repTier === 'friendly') {
+                             startDialogue = "Belgeletmişsin! İşte şimdi ciddileşebiliriz dostum.";
+                         } else {
+                             startDialogue = "Belgeletmişsin, şimdi ciddileşebiliriz.";
+                         }
+                     }
                 }
 
                 negotiationState = {
@@ -780,7 +893,8 @@
             if (negotiationState && negotiationState.item) {
                 gameState.negotiationMemory[negotiationState.item.id] = {
                     offer: negotiationState.currentOffer,
-                    dialogue: negotiationState.dialogue
+                    dialogue: negotiationState.dialogue,
+                    wasCertified: negotiationState.item.certified // Store this to detect changes later
                 };
             }
         }
@@ -874,12 +988,15 @@
             const realValue = item.realValue;
 
             // Logic: Is the offer reasonable?
-            let maxTolerable = realValue * (1.0 + (gameState.reputation / 200));
+            let repBonus = (gameState.reputation - 50) / 100; // -0.5 to 0.5
+            let maxTolerable = realValue * (1.0 + repBonus);
 
             // Certification Logic: If rare/legendary and NOT certified, he won't pay near full value
             // unless forced or convinced.
             if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
-                maxTolerable = realValue * 0.5; // He knows it might be real, but won't risk paying for it without proof
+                // If Friendly, he is slightly more lenient
+                if (gameState.reputation > 70) maxTolerable = realValue * 0.65;
+                else maxTolerable = realValue * 0.5;
             }
 
             // Hidden Interest Mechanic
@@ -900,27 +1017,30 @@
             if (playerOffer <= maxTolerable) {
                 // Success chance based on how greedy the player is
                 const greedFactor = playerOffer / realValue; // 1.0 = fair, 1.2 = pushing it
+                // Friend bonus: easier to convince
+                let successChanceModifier = (gameState.reputation - 50) / 200; // +/- 0.25
+
                 const roll = Math.random();
 
-                if (roll > (greedFactor - 0.5)) {
+                if (roll > (greedFactor - 0.5 - successChanceModifier)) {
                     // Accepted
                     state.currentOffer = playerOffer;
 
                     if (item.eoInterest === 2) {
                          state.dialogue = "Tamam tamam, alıyorum. Sakın kimseye bu fiyattan bahsetme.";
                     } else {
-                         state.dialogue = EO_AI.getLine('accept');
+                         state.dialogue = EO_AI.getLine('accept', gameState.reputation);
                     }
                 } else {
                     // Counter-counter
                     const middleGround = Math.floor((state.currentOffer + playerOffer) / 2);
                     state.currentOffer = middleGround;
-                    state.dialogue = "Çok istiyorsun. Şurada buluşalım.";
+                    state.dialogue = EO_AI.getLine('lowball', gameState.reputation);
                     gameState.eoPatience -= 1;
                 }
             } else {
                 // Insultingly high
-                state.dialogue = EO_AI.getLine('reject');
+                state.dialogue = EO_AI.getLine('reject', gameState.reputation);
                 gameState.eoPatience -= 1;
             }
 
