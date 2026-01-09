@@ -408,6 +408,14 @@
             { name: "Küflü Kitaplar", type: "junk", baseValue: 40 },
             { name: "Tek Ayakkabı", type: "junk", baseValue: 10 },
             { name: "Bozuk Vantilatör", type: "junk", baseValue: 80 },
+            { name: "Tek Teylik (Sol)", type: "junk", baseValue: 5 },
+            { name: "Boş Yoğurt Kapları", type: "junk", baseValue: 10 },
+            { name: "Düğümü Çözülemeyen Kablo Yumağı", type: "junk", baseValue: 25 },
+            { name: "Kırık Şemsiye", type: "junk", baseValue: 15 },
+            { name: "Tarihi Geçmiş Konserveler", type: "junk", baseValue: 30 },
+            { name: "Patlak Futbol Topu", type: "junk", baseValue: 20 },
+            { name: "Çatlak Plastik Kova", type: "junk", baseValue: 10 },
+            { name: "Eski Takvim Yaprakları", type: "junk", baseValue: 5 },
 
             // COMMON
             { name: "İkinci El Mikrodalga", type: "common", baseValue: 400 },
@@ -417,21 +425,44 @@
             { name: "Çalışan Tost Makinesi", type: "common", baseValue: 350 },
             { name: "Balık Oltası", type: "common", baseValue: 500 },
             { name: "Eski Model Ütü", type: "common", baseValue: 200 },
+            { name: "Tüplü Televizyon", type: "common", baseValue: 300 },
+            { name: "Elektrikli Battaniye", type: "common", baseValue: 450 },
+            { name: "Dantelli Sehpa Örtüsü", type: "common", baseValue: 150 },
+            { name: "Mangal Takımı (Az Kullanılmış)", type: "common", baseValue: 550 },
+            { name: "Eski Ansiklopedi Seti", type: "common", baseValue: 200 },
+            { name: "Dikiş Makinesi", type: "common", baseValue: 700 },
+            { name: "Plastik Bahçe Sandalyesi", type: "common", baseValue: 120 },
+            { name: "Saz (Bağlama)", type: "common", baseValue: 800 },
+            { name: "Bavul Dolusu Kıyafet", type: "common", baseValue: 400 },
 
-            // RARE (Values Boosted for High Stakes)
+            // RARE
             { name: "Gümüş Çatal Bıçak Seti", type: "rare", baseValue: 5000 },
             { name: "1990 Yapımı Oyun Konsolu", type: "rare", baseValue: 6500 },
             { name: "İmzalı Futbol Forması", type: "rare", baseValue: 8000 },
             { name: "Antika Cep Saati", type: "rare", baseValue: 9500 },
             { name: "Profesyonel Kamera Lensi", type: "rare", baseValue: 7000 },
             { name: "El Dokuması Kilim", type: "rare", baseValue: 6000 },
+            { name: "İlk Basım Çizgi Roman", type: "rare", baseValue: 5500 },
+            { name: "Mekanik Daktilo", type: "rare", baseValue: 7500 },
+            { name: "Bakır İmbik", type: "rare", baseValue: 6000 },
+            { name: "Koleksiyonluk Plak (Barış Manço)", type: "rare", baseValue: 9000 },
+            { name: "Profesyonel Teleskop", type: "rare", baseValue: 8500 },
+            { name: "Eski Marka Çakmak (Gümüş)", type: "rare", baseValue: 5200 },
+            { name: "Deri Kovboy Çizmeleri", type: "rare", baseValue: 4500 },
+            { name: "Oyuncu Bilgisayarı Kasası", type: "rare", baseValue: 9800 },
 
-            // LEGENDARY (Values Boosted)
+            // LEGENDARY
             { name: "Osmanlı Dönemi Hançer", type: "legendary", baseValue: 35000 },
             { name: "Altın Kolye (18 Ayar)", type: "legendary", baseValue: 28000 },
             { name: "Kapalı Kutu Son Model Laptop", type: "legendary", baseValue: 45000 },
             { name: "Ünlü Bir Ressamın Eskizi", type: "legendary", baseValue: 60000 },
-            { name: "Elmas Yüzük", type: "legendary", baseValue: 80000 }
+            { name: "Elmas Yüzük", type: "legendary", baseValue: 80000 },
+            { name: "Meteor Parçası", type: "legendary", baseValue: 40000 },
+            { name: "İmzalı Atatürk Portresi (Orijinal)", type: "legendary", baseValue: 95000 },
+            { name: "Kapalı Kutu Retro Konsol (1985)", type: "legendary", baseValue: 55000 },
+            { name: "Viking Dönemi Balta Ucu", type: "legendary", baseValue: 70000 },
+            { name: "Kripto Cüzdan (Şifresi Üstünde)", type: "legendary", baseValue: 120000 },
+            { name: "Safir Taşlı Broş", type: "legendary", baseValue: 65000 }
         ];
 
         // --- EO INTELLIGENCE ---
@@ -440,31 +471,91 @@
             patience: 3, // Lowers with bad offers
 
             dialogue: {
-                greeting: [
-                    "Ooo, yine mi sen? Bakalım bugün ne getirdin.",
-                    "Hoş geldin. Umarım vakit harcamaya değecek şeyler vardır.",
-                    "Çabuk ol, başka işlerim de var."
-                ],
-                inspecting: [
-                    "Hımm... Şuna bir bakalım.",
-                    "Bunun ne olduğunu bildiğine emin misin?",
-                    "İlginç... ama satılır mı emin değilim."
-                ],
-                lowball: [
-                    "Buna en fazla bu kadar veririm. İşine gelirse.",
-                    "Bak, bu piyasada bundan fazlasını bulamazsın.",
-                    "Sırf senin hatırına bu fiyatı veriyorum."
-                ],
-                accept: [
-                    "Tamamdır, anlaştık.",
-                    "Güzel, ver bakalım.",
-                    "Hah, sonunda mantıklı bir karar verdin."
-                ],
-                reject: [
-                    "Dalga mı geçiyorsun? Git işine.",
-                    "Bu fiyatla ancak kendini kandırırsın.",
-                    "Benimle oyun oynama evlat."
-                ],
+                greeting: {
+                    friendly: [
+                        "Ooo, benim favori tüccarım gelmiş! Yine mi beni batırmaya çalışacaksın, yoksa bu sefer gerçekten işe yarar bir şeyin var mı?",
+                        "Hoş geldin dostum! Bakalım bugün hangi 'şahane' malları itelemeye çalışacaksın?",
+                        "Gözüm yollarda kaldı. Hadi göster bakalım, bugün beni nasıl kandıracaksın?"
+                    ],
+                    neutral: [
+                        "Hoş geldin. Bakalım bugün ne getirdin.",
+                        "Umarım vakit harcamaya değecek şeyler vardır.",
+                        "Dükkan açık, ama sabrım sınırlı. Göster bakalım."
+                    ],
+                    suspicious: [
+                        "Yine mi sen? Çabuk ol, fazla vaktim yok.",
+                        "Sadece bakıyorum, söz vermem. Şüpheli bir şey görürsem polisi ararım.",
+                        "Kapıdan girmeden önce ayakkabılarını sildin mi? Ne istiyorsun?"
+                    ]
+                },
+                inspecting: {
+                    friendly: [
+                        "Bakalım bugün hangi hazineyi buldun?",
+                        "Bunu benim için mi sakladın? Hadi görelim.",
+                        "Güzel bir şeye benziyor, anlat bakalım."
+                    ],
+                    neutral: [
+                        "Hımm... Şuna bir bakalım.",
+                        "Bunun ne olduğunu bildiğine emin misin?",
+                        "İlginç... ama satılır mı emin değilim."
+                    ],
+                    suspicious: [
+                        "Ceplerini boşalt. Bu ne?",
+                        "Çalıntı mal almıyorum, baştan söyleyeyim.",
+                        "Hızlı ol, buna değer mi?"
+                    ]
+                },
+                lowball: {
+                    friendly: [
+                        "Yapma şimdi, dostuz diye kazıklayacak mısın beni?",
+                        "Seni severim ama cüzdanımı daha çok severim. Fiyat bu.",
+                        "Hadi ama, bu fiyata bana ver, hatırım kalır."
+                    ],
+                    neutral: [
+                        "Buna en fazla bu kadar veririm. İşine gelirse.",
+                        "Bak, bu piyasada bundan fazlasını bulamazsın.",
+                        "Piyasa durgun, teklifim bu."
+                    ],
+                    suspicious: [
+                        "Bu hurdaya bu fiyat çok bile. Al ya da git.",
+                        "Bunu başkasına satamazsın, dua et ben alıyorum.",
+                        "Sana bir iyilik yapıp bu parayı veriyorum, uzatma."
+                    ]
+                },
+                accept: {
+                    friendly: [
+                        "Hah şöyle! Seninle iş yapmayı bu yüzden seviyorum.",
+                        "Güzel anlaşma. Bir kahve de ısmarlayayım mı? Şaka şaka, git hadi.",
+                        "Tamamdır dostum, hayrını gör."
+                    ],
+                    neutral: [
+                        "Tamamdır, anlaştık.",
+                        "Makul. Al paranı.",
+                        "Güzel, ver bakalım."
+                    ],
+                    suspicious: [
+                        "Al paranı ve kaybol.",
+                        "Sonunda. Bir daha böyle pazarlık yapma.",
+                        "Tamam, şimdi git dükkanımdan."
+                    ]
+                },
+                reject: {
+                    friendly: [
+                        "Şakacı seni! Ama cidden, olmaz.",
+                        "Beni güldürdün, ama o fiyata imkansız dostum.",
+                        "Yok artık, o fiyata dükkanı da vereyim mi?"
+                    ],
+                    neutral: [
+                        "Dalga mı geçiyorsun? Git işine.",
+                        "Bu fiyatla ancak kendini kandırırsın.",
+                        "Benimle oyun oynama evlat."
+                    ],
+                    suspicious: [
+                        "Çık dışarı! Hemen!",
+                        "Seni ciddiye alanda kabahat. Defol.",
+                        "Sabrımı zorluyorsun yabancı."
+                    ]
+                },
                 threatResponse: [
                     "Beni tehdit etme, zararlı çıkarsın.",
                     "Cesaretini takdir ettim ama aptallığını değil.",
@@ -472,8 +563,18 @@
                 ]
             },
 
-            getLine: function(category) {
-                const lines = this.dialogue[category];
+            getLine: function(category, reputation) {
+                // If the category is threatResponse (array), return directly
+                if (Array.isArray(this.dialogue[category])) {
+                    const lines = this.dialogue[category];
+                    return lines[Math.floor(Math.random() * lines.length)];
+                }
+
+                let tier = 'neutral';
+                if (reputation > 70) tier = 'friendly';
+                else if (reputation < 30) tier = 'suspicious';
+
+                const lines = this.dialogue[category][tier];
                 return lines[Math.floor(Math.random() * lines.length)];
             },
 
@@ -482,9 +583,9 @@
                 // Base offer is 40-60% of real value
                 let percent = 0.4 + (Math.random() * 0.2);
 
-                // Reputation bonus (small)
-                if (reputation > 70) percent += 0.1;
-                if (reputation < 30) percent -= 0.1;
+                // Reputation bonus
+                if (reputation > 70) percent += 0.15; // Better offers for friends
+                if (reputation < 30) percent -= 0.15; // Worse for suspicious
 
                 return Math.floor(itemRealValue * percent);
             }
@@ -540,7 +641,12 @@
 
         function startRound() {
             gameState.availableUnits = generateStorageUnits();
-            gameState.eoPatience = 4;
+
+            // Determine Patience based on Reputation
+            if (gameState.reputation > 70) gameState.eoPatience = 4;
+            else if (gameState.reputation < 30) gameState.eoPatience = 2;
+            else gameState.eoPatience = 3;
+
             gameState.negotiationMemory = {};
 
             // Check for Game Over (Bankruptcy)
@@ -727,7 +833,7 @@
             ui.app.innerHTML = `
                 <div class="screen screen-glass">
                     <h2>🏪 EO'NUN DÜKKANI</h2>
-                    <p>EO: "${EO_AI.getLine('greeting')}"</p>
+                    <p>EO: "${EO_AI.getLine('greeting', gameState.reputation)}"</p>
                     <div class="item-list">
                         ${listHtml}
                     </div>
@@ -739,9 +845,18 @@
         window.initNegotiation = function(itemId) {
             const item = gameState.inventory.find(i => i.id === itemId);
 
-            // Check Memory
-            if (gameState.negotiationMemory[itemId]) {
-                const mem = gameState.negotiationMemory[itemId];
+            // Check Memory and handle "Return with Certificate" logic
+            let mem = gameState.negotiationMemory[itemId];
+
+            // Special case: Player certified the item AFTER a failed negotiation
+            // Logic: Memory exists, was NOT certified in memory, but IS certified now
+            if (mem && !mem.wasCertified && item.certified) {
+                 // Reset memory for this item effectively to allow re-pricing
+                 delete gameState.negotiationMemory[itemId];
+                 mem = null;
+            }
+
+            if (mem) {
                 negotiationState = {
                     item: item,
                     currentOffer: mem.offer,
@@ -749,16 +864,45 @@
                     dialogue: mem.dialogue || "Kaldığımız yerden devam edelim."
                 };
             } else {
+                // Determine dialogue tone based on reputation
+                let repTier = 'neutral';
+                if (gameState.reputation > 70) repTier = 'friendly';
+                else if (gameState.reputation < 30) repTier = 'suspicious';
+
                 let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
-                let startDialogue = "Ooo, bunu mu satıyorsun? Bakalım kaç para eder...";
+                let startDialogue = EO_AI.getLine('inspecting', gameState.reputation);
 
                 // Logic for rare/uncertified items
                 if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
                     initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
-                    startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                    if(repTier === 'friendly') {
+                        startDialogue = "Dostum bu çok değerli görünüyor ama sahteleri çok. Bir belgen var mı?";
+                    } else if (repTier === 'suspicious') {
+                         startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
+                    } else {
+                        startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                    }
                 } else if (item.certified) {
                      initialOffer = Math.floor(initialOffer * 1.5); // Better offer
-                     startDialogue = "Belgesi var demek... Güzel. O zaman ciddi konuşalım.";
+
+                     // Check if this is a "Return with Certificate" moment
+                     // We know it is because we cleared 'mem' above if it was a return.
+                     // But we want specific dialogue if it's a return.
+                     // A simple heuristic: If the offer is much higher than what it would be uncertified.
+                     // Better: Just check if we had memory before we cleared it? No, too late.
+                     // Let's rely on standard certified lines, OR add a flag.
+
+                     if (gameState.negotiationMemory[itemId] === undefined) {
+                         // It could be a fresh item OR a cleared memory item.
+                         // We can't easily distinguish without more state.
+                         // But we can say "Belgeletmişsin" generally if it is certified.
+
+                         if(repTier === 'friendly') {
+                             startDialogue = "Belgeletmişsin! İşte şimdi ciddileşebiliriz dostum.";
+                         } else {
+                             startDialogue = "Belgeletmişsin, şimdi ciddileşebiliriz.";
+                         }
+                     }
                 }
 
                 negotiationState = {
@@ -780,7 +924,8 @@
             if (negotiationState && negotiationState.item) {
                 gameState.negotiationMemory[negotiationState.item.id] = {
                     offer: negotiationState.currentOffer,
-                    dialogue: negotiationState.dialogue
+                    dialogue: negotiationState.dialogue,
+                    wasCertified: negotiationState.item.certified // Store this to detect changes later
                 };
             }
         }
@@ -874,12 +1019,15 @@
             const realValue = item.realValue;
 
             // Logic: Is the offer reasonable?
-            let maxTolerable = realValue * (1.0 + (gameState.reputation / 200));
+            let repBonus = (gameState.reputation - 50) / 100; // -0.5 to 0.5
+            let maxTolerable = realValue * (1.0 + repBonus);
 
             // Certification Logic: If rare/legendary and NOT certified, he won't pay near full value
             // unless forced or convinced.
             if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
-                maxTolerable = realValue * 0.5; // He knows it might be real, but won't risk paying for it without proof
+                // If Friendly, he is slightly more lenient
+                if (gameState.reputation > 70) maxTolerable = realValue * 0.65;
+                else maxTolerable = realValue * 0.5;
             }
 
             // Hidden Interest Mechanic
@@ -900,27 +1048,30 @@
             if (playerOffer <= maxTolerable) {
                 // Success chance based on how greedy the player is
                 const greedFactor = playerOffer / realValue; // 1.0 = fair, 1.2 = pushing it
+                // Friend bonus: easier to convince
+                let successChanceModifier = (gameState.reputation - 50) / 200; // +/- 0.25
+
                 const roll = Math.random();
 
-                if (roll > (greedFactor - 0.5)) {
+                if (roll > (greedFactor - 0.5 - successChanceModifier)) {
                     // Accepted
                     state.currentOffer = playerOffer;
 
                     if (item.eoInterest === 2) {
                          state.dialogue = "Tamam tamam, alıyorum. Sakın kimseye bu fiyattan bahsetme.";
                     } else {
-                         state.dialogue = EO_AI.getLine('accept');
+                         state.dialogue = EO_AI.getLine('accept', gameState.reputation);
                     }
                 } else {
                     // Counter-counter
                     const middleGround = Math.floor((state.currentOffer + playerOffer) / 2);
                     state.currentOffer = middleGround;
-                    state.dialogue = "Çok istiyorsun. Şurada buluşalım.";
+                    state.dialogue = EO_AI.getLine('lowball', gameState.reputation);
                     gameState.eoPatience -= 1;
                 }
             } else {
                 // Insultingly high
-                state.dialogue = EO_AI.getLine('reject');
+                state.dialogue = EO_AI.getLine('reject', gameState.reputation);
                 gameState.eoPatience -= 1;
             }
 
@@ -1028,18 +1179,20 @@
                 let roll = Math.random();
                 let chosenType = 'junk';
 
-                if (unit.risk === 0) { // Low Risk: Mostly Common, some Junk
-                    if (roll > 0.3) chosenType = 'common';
-                    if (roll > 0.9) chosenType = 'rare';
+                if (unit.risk === 0) { // Low Risk: Mostly Common (0.4-0.95), some Junk (<0.4), rare Rare (>0.95)
+                    if (roll < 0.40) chosenType = 'junk';
+                    else if (roll < 0.95) chosenType = 'common';
+                    else chosenType = 'rare'; // 5% Rare, 0% Legendary
                 } else if (unit.risk === 1) { // Med Risk: Balanced
-                    if (roll > 0.2) chosenType = 'common';
-                    if (roll > 0.7) chosenType = 'rare';
-                    if (roll > 0.95) chosenType = 'legendary';
-                } else { // High Risk: High Junk OR High Legendary
-                    if (roll > 0.5) chosenType = 'junk';
-                    else if (roll > 0.8) chosenType = 'rare';
-                    else if (roll > 0.9) chosenType = 'legendary';
-                    else chosenType = 'common';
+                    if (roll < 0.30) chosenType = 'junk';
+                    else if (roll < 0.85) chosenType = 'common';
+                    else if (roll < 0.985) chosenType = 'rare'; // 13.5% Rare
+                    else chosenType = 'legendary'; // 1.5% Legendary (Very rare)
+                } else { // High Risk: High Junk, but potential for Rare/Legendary
+                    if (roll < 0.50) chosenType = 'junk'; // 50% Junk
+                    else if (roll < 0.85) chosenType = 'common'; // 35% Common
+                    else if (roll < 0.98) chosenType = 'rare'; // 13% Rare
+                    else chosenType = 'legendary'; // 2% Legendary
                 }
 
                 const possibleItems = ITEMS_DB.filter(x => x.type === chosenType);
