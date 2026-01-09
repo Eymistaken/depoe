@@ -585,7 +585,41 @@
                     "Beni tehdit etme, zararlı çıkarsın.",
                     "Cesaretini takdir ettim ama aptallığını değil.",
                     "Tamam tamam, sakin ol. Belki bir şeyler yapabiliriz."
-                ]
+                ],
+                consulting: {
+                    friendly: [
+                        "Bu {item} için bir uzman arkadaşıma danışmam lazım. Bekle.",
+                        "Şüpheli duruyor. Bir arkadaşa fotoğraf atıyorum, bekle.",
+                        "Hımm, {item}... Emin olamadım. Bir bilene sorayım."
+                    ],
+                    neutral: [
+                        "Bunun {item} olduğundan şüpheliyim. Uzmanımı arıyorum.",
+                        "Bir dakika, bu parçayı teyit etmem lazım. Bekle burada.",
+                        "Sahte olabilir. Bir telefon görüşmesi yapacağım."
+                    ],
+                    suspicious: [
+                        "Bana sahte mal kakalamaya çalışma. Sorgulatıyorum, bekle.",
+                        "Kıpırdama. Bunun çalıntı olup olmadığını kontrol ettiriyorum.",
+                        "Eğer bu sahteyse başın dertte. Bekle, kontrol ediyorum."
+                    ]
+                },
+                consultingReturn: {
+                    friendly: [
+                        "Tamamdır, arkadaşım onayladı. Temiz malmış.",
+                        "Haberler iyi! Orijinalmiş. Devam edelim.",
+                        "Kusura bakma beklettim, mal sağlammış."
+                    ],
+                    neutral: [
+                        "Tamam, sordum. Bir sorun görünmüyor.",
+                        "Pekala, uzmanım onay verdi. Konuşmaya devam edebiliriz.",
+                        "Şimdilik temiz görünüyor. Fiyata dönelim."
+                    ],
+                    suspicious: [
+                        "Şanslısın, temiz çıktı. Ama gözüm üzerinde.",
+                        "Bu seferlik yırttın. Mal gerçekmiş.",
+                        "Tamam, sahte değilmiş. Ama fiyatım değişmedi."
+                    ]
+                }
             },
 
             getLine: function(category, reputation) {
@@ -960,6 +994,7 @@
                     status: 'active',
                     dialogue: mem.dialogue || "Kaldığımız yerden devam edelim."
                 };
+                renderNegotiation();
             } else {
                 // Determine dialogue tone based on reputation
                 let repTier = 'neutral';
@@ -969,7 +1004,50 @@
                 let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
                 let startDialogue = EO_AI.getLine('inspecting', gameState.reputation);
 
-                // Logic for rare/uncertified items
+                // EXPERT CONSULTATION CHECK
+                let expertChance = 0.3; // Base Neutral 30%
+                if (gameState.reputation > 70) expertChance = 0.1; // Friendly 10%
+                if (gameState.reputation < 30) expertChance = 0.6; // Suspicious 60%
+
+                // Only trigger randomly, and maybe avoid if certified? The request didn't specify, so random for all.
+                // But logic says if he trusts you (certified), maybe less need?
+                // The requirements say "triggers randomly when a negotiation starts".
+                // I will apply it regardless of item type, as per "New Mechanic" section instructions.
+
+                if (Math.random() < expertChance) {
+                    // TRIGGER CONSULTATION
+                    let consultLine = EO_AI.getLine('consulting', gameState.reputation);
+                    consultLine = consultLine.replace('{item}', item.name);
+
+                    negotiationState = {
+                        item: item,
+                        currentOffer: initialOffer, // Calculated but hidden
+                        status: 'active',
+                        lastMove: 'start',
+                        dialogue: consultLine,
+                        isConsulting: true
+                    };
+
+                    renderNegotiation();
+
+                    // Phase 2: The Wait (5s)
+                    setTimeout(() => {
+                        // Check if state is still active/valid (user might have reloaded or something, though reload resets state)
+                        if (negotiationState && negotiationState.item.id === item.id) {
+                            negotiationState.isConsulting = false;
+
+                            let returnLine = EO_AI.getLine('consultingReturn', gameState.reputation);
+                            negotiationState.dialogue = returnLine;
+
+                            saveNegotiationState();
+                            renderNegotiation();
+                        }
+                    }, 5000);
+
+                    return; // Stop here, don't execute standard start logic
+                }
+
+                // Logic for rare/uncertified items (Standard Start)
                 if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
                     // Suspicion Check logic
                     let suspicionChance = 0.8; // Base 80%
@@ -1001,17 +1079,7 @@
                      initialOffer = Math.floor(initialOffer * 1.5); // Better offer
 
                      // Check if this is a "Return with Certificate" moment
-                     // We know it is because we cleared 'mem' above if it was a return.
-                     // But we want specific dialogue if it's a return.
-                     // A simple heuristic: If the offer is much higher than what it would be uncertified.
-                     // Better: Just check if we had memory before we cleared it? No, too late.
-                     // Let's rely on standard certified lines, OR add a flag.
-
                      if (gameState.negotiationMemory[itemId] === undefined) {
-                         // It could be a fresh item OR a cleared memory item.
-                         // We can't easily distinguish without more state.
-                         // But we can say "Belgeletmişsin" generally if it is certified.
-
                          if(repTier === 'friendly') {
                              startDialogue = "Belgeletmişsin! İşte şimdi ciddileşebiliriz dostum.";
                          } else {
@@ -1030,9 +1098,8 @@
 
                 // Save immediately
                 saveNegotiationState();
+                renderNegotiation();
             }
-
-            renderNegotiation();
         };
 
         function saveNegotiationState() {
@@ -1051,6 +1118,9 @@
             const rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
             const playerKnowsValue = item.certified;
 
+            // EXPERT CONSULTATION UI OVERRIDE
+            const isConsulting = state.isConsulting === true;
+
             // Patience Visualization
             let patienceHtml = '';
             for(let i=0; i<4; i++) {
@@ -1064,27 +1134,37 @@
                     <div class="scene-container">
                         <div class="scene-overlay"></div>
                         <div class="eo-avatar-container">
-                             <div class="eo-avatar">👺</div>
+                             ${isConsulting
+                                ? `<div class="eo-avatar" style="animation:none; background:none; font-size:4rem;">📞</div>`
+                                : `<div class="eo-avatar">👺</div>`
+                             }
                              <div class="speech-bubble">"${state.dialogue}"</div>
-                             <div style="margin-top:10px; font-size:1.2rem; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:10px;">
-                                SABIR: ${patienceHtml}
-                             </div>
+                             ${!isConsulting ? `
+                                 <div style="margin-top:10px; font-size:1.2rem; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:10px;">
+                                    SABIR: ${patienceHtml}
+                                 </div>
+                             ` : ''}
                         </div>
 
                         <div class="negotiation-desk">
                             <div class="desk-item">
                                 <h3 style="margin:0; color:var(--accent-color)">${item.name}</h3>
                                 <div style="font-size:0.8rem; opacity:0.8">${rarityInfo.label} ${item.certified ? '✅' : ''}</div>
-                                <div style="margin-top:5px; font-weight:bold; color:var(--success-color)">TEKLİF: ${state.currentOffer} ₺</div>
+
+                                ${isConsulting
+                                    ? `<div style="margin-top:5px; font-weight:bold; color:#aaa">TEKLİF: ???</div>`
+                                    : `<div style="margin-top:5px; font-weight:bold; color:var(--success-color)">TEKLİF: ${state.currentOffer} ₺</div>`
+                                }
+
                                 ${playerKnowsValue ? `<div style="font-size:0.7rem; color:#aaa">Gerçek Değer: ${item.realValue} ₺</div>` : ''}
                             </div>
 
                             <div class="desk-actions">
-                                <button class="btn" onclick="actionAccept()">✅ KABUL (${state.currentOffer} ₺)</button>
-                                <button class="btn" onclick="showCounterInput()" ${patienceLow ? 'disabled' : ''}>💬 PAZARLIK</button>
-                                <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow ? 'disabled' : ''}>🎲 BLÖF</button>
-                                <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow ? 'disabled' : ''}>🤬 TEHDİT</button>
-                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()">❌ VAZGEÇ</button>
+                                <button class="btn" onclick="actionAccept()" ${isConsulting ? 'disabled' : ''}>✅ KABUL (${isConsulting ? '???' : state.currentOffer + ' ₺'})</button>
+                                <button class="btn" onclick="showCounterInput()" ${patienceLow || isConsulting ? 'disabled' : ''}>💬 PAZARLIK</button>
+                                <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow || isConsulting ? 'disabled' : ''}>🎲 BLÖF</button>
+                                <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow || isConsulting ? 'disabled' : ''}>🤬 TEHDİT</button>
+                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()" ${isConsulting ? 'disabled' : ''}>❌ VAZGEÇ</button>
                             </div>
                         </div>
                     </div>
