@@ -188,16 +188,26 @@
         .storage-card h3 { margin-top: 0; color: var(--accent-color); }
 
         .storage-card.black-market {
-            border-color: var(--black-market-color);
-            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
-            animation: pulse-purple 2s infinite;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-color: #ff0000;
+            color: #e0e0e0;
+            font-weight: 800;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+            animation: pulse-red 2s infinite;
         }
-        .storage-card.black-market h3 { color: var(--black-market-color); }
+        .storage-card.black-market h3 { color: #ff0000; }
+        .storage-card.black-market p { font-weight: 800; }
 
-        @keyframes pulse-purple {
-            0% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.3); }
-            50% { box-shadow: 0 0 35px rgba(157, 0, 255, 0.6); }
-            100% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.3); }
+        .storage-card.black-market .unit-price {
+            color: #ff0000 !important;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.8) !important;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 20px #8b0000; }
+            50% { box-shadow: 0 0 35px #ff0000; }
+            100% { box-shadow: 0 0 20px #8b0000; }
         }
 
         .risk-badge {
@@ -211,7 +221,7 @@
         .risk-low { background: rgba(0, 230, 118, 0.2); color: #00e676; }
         .risk-med { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
         .risk-high { background: rgba(255, 75, 75, 0.2); color: #ff4b4b; }
-        .risk-black { background: rgba(157, 0, 255, 0.2); color: var(--black-market-color); }
+        .risk-black { background: rgba(0, 0, 0, 0.9); color: #ff0000; }
 
         /* ITEM REVEAL & LISTS */
         .item-list {
@@ -693,8 +703,8 @@
             const risks = ['Düşük', 'Orta', 'Yüksek'];
 
             for(let i=0; i<5; i++) {
-                // Black Market Chance (15%)
-                let isBlackMarket = Math.random() < 0.15;
+                // Black Market Chance (3%)
+                let isBlackMarket = Math.random() < 0.03;
 
                 let riskLevel, riskLabel, name, price, desc, className;
 
@@ -704,7 +714,7 @@
                     name = `Depo #${100 + i + (gameState.round * 5)} (KARA BORSA)`;
                     className = "black-market";
 
-                    let basePrice = 2000 + (gameState.round * 200);
+                    let basePrice = 15000 + (gameState.round * 2000);
                     price = Math.floor(basePrice * (0.8 + Math.random() * 0.4));
                     desc = "Mor bir ışık yayıyor... İçerisi tehlikeli görünüyor.";
                 } else {
@@ -756,7 +766,7 @@
                     <h3>${unit.name}</h3>
                     <p>${unit.description}</p>
                     <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
-                    <div style="margin-top:auto; font-size:1.4rem; font-weight:bold; color:var(--accent-color); text-shadow:0 0 10px rgba(255,215,0,0.3)">
+                    <div class="unit-price" style="margin-top:auto; font-size:1.4rem; font-weight:bold; color:var(--accent-color); text-shadow:0 0 10px rgba(255,215,0,0.3)">
                         ${unit.price} ₺
                     </div>
                 </div>
