@@ -408,6 +408,14 @@
             { name: "Küflü Kitaplar", type: "junk", baseValue: 40 },
             { name: "Tek Ayakkabı", type: "junk", baseValue: 10 },
             { name: "Bozuk Vantilatör", type: "junk", baseValue: 80 },
+            { name: "Tek Teylik (Sol)", type: "junk", baseValue: 5 },
+            { name: "Boş Yoğurt Kapları", type: "junk", baseValue: 10 },
+            { name: "Düğümü Çözülemeyen Kablo Yumağı", type: "junk", baseValue: 25 },
+            { name: "Kırık Şemsiye", type: "junk", baseValue: 15 },
+            { name: "Tarihi Geçmiş Konserveler", type: "junk", baseValue: 30 },
+            { name: "Patlak Futbol Topu", type: "junk", baseValue: 20 },
+            { name: "Çatlak Plastik Kova", type: "junk", baseValue: 10 },
+            { name: "Eski Takvim Yaprakları", type: "junk", baseValue: 5 },
 
             // COMMON
             { name: "İkinci El Mikrodalga", type: "common", baseValue: 400 },
@@ -417,21 +425,44 @@
             { name: "Çalışan Tost Makinesi", type: "common", baseValue: 350 },
             { name: "Balık Oltası", type: "common", baseValue: 500 },
             { name: "Eski Model Ütü", type: "common", baseValue: 200 },
+            { name: "Tüplü Televizyon", type: "common", baseValue: 300 },
+            { name: "Elektrikli Battaniye", type: "common", baseValue: 450 },
+            { name: "Dantelli Sehpa Örtüsü", type: "common", baseValue: 150 },
+            { name: "Mangal Takımı (Az Kullanılmış)", type: "common", baseValue: 550 },
+            { name: "Eski Ansiklopedi Seti", type: "common", baseValue: 200 },
+            { name: "Dikiş Makinesi", type: "common", baseValue: 700 },
+            { name: "Plastik Bahçe Sandalyesi", type: "common", baseValue: 120 },
+            { name: "Saz (Bağlama)", type: "common", baseValue: 800 },
+            { name: "Bavul Dolusu Kıyafet", type: "common", baseValue: 400 },
 
-            // RARE (Values Boosted for High Stakes)
+            // RARE
             { name: "Gümüş Çatal Bıçak Seti", type: "rare", baseValue: 5000 },
             { name: "1990 Yapımı Oyun Konsolu", type: "rare", baseValue: 6500 },
             { name: "İmzalı Futbol Forması", type: "rare", baseValue: 8000 },
             { name: "Antika Cep Saati", type: "rare", baseValue: 9500 },
             { name: "Profesyonel Kamera Lensi", type: "rare", baseValue: 7000 },
             { name: "El Dokuması Kilim", type: "rare", baseValue: 6000 },
+            { name: "İlk Basım Çizgi Roman", type: "rare", baseValue: 5500 },
+            { name: "Mekanik Daktilo", type: "rare", baseValue: 7500 },
+            { name: "Bakır İmbik", type: "rare", baseValue: 6000 },
+            { name: "Koleksiyonluk Plak (Barış Manço)", type: "rare", baseValue: 9000 },
+            { name: "Profesyonel Teleskop", type: "rare", baseValue: 8500 },
+            { name: "Eski Marka Çakmak (Gümüş)", type: "rare", baseValue: 5200 },
+            { name: "Deri Kovboy Çizmeleri", type: "rare", baseValue: 4500 },
+            { name: "Oyuncu Bilgisayarı Kasası", type: "rare", baseValue: 9800 },
 
-            // LEGENDARY (Values Boosted)
+            // LEGENDARY
             { name: "Osmanlı Dönemi Hançer", type: "legendary", baseValue: 35000 },
             { name: "Altın Kolye (18 Ayar)", type: "legendary", baseValue: 28000 },
             { name: "Kapalı Kutu Son Model Laptop", type: "legendary", baseValue: 45000 },
             { name: "Ünlü Bir Ressamın Eskizi", type: "legendary", baseValue: 60000 },
-            { name: "Elmas Yüzük", type: "legendary", baseValue: 80000 }
+            { name: "Elmas Yüzük", type: "legendary", baseValue: 80000 },
+            { name: "Meteor Parçası", type: "legendary", baseValue: 40000 },
+            { name: "İmzalı Atatürk Portresi (Orijinal)", type: "legendary", baseValue: 95000 },
+            { name: "Kapalı Kutu Retro Konsol (1985)", type: "legendary", baseValue: 55000 },
+            { name: "Viking Dönemi Balta Ucu", type: "legendary", baseValue: 70000 },
+            { name: "Kripto Cüzdan (Şifresi Üstünde)", type: "legendary", baseValue: 120000 },
+            { name: "Safir Taşlı Broş", type: "legendary", baseValue: 65000 }
         ];
 
         // --- EO INTELLIGENCE ---
@@ -1148,18 +1179,20 @@
                 let roll = Math.random();
                 let chosenType = 'junk';
 
-                if (unit.risk === 0) { // Low Risk: Mostly Common, some Junk
-                    if (roll > 0.3) chosenType = 'common';
-                    if (roll > 0.9) chosenType = 'rare';
+                if (unit.risk === 0) { // Low Risk: Mostly Common (0.4-0.95), some Junk (<0.4), rare Rare (>0.95)
+                    if (roll < 0.40) chosenType = 'junk';
+                    else if (roll < 0.95) chosenType = 'common';
+                    else chosenType = 'rare'; // 5% Rare, 0% Legendary
                 } else if (unit.risk === 1) { // Med Risk: Balanced
-                    if (roll > 0.2) chosenType = 'common';
-                    if (roll > 0.7) chosenType = 'rare';
-                    if (roll > 0.95) chosenType = 'legendary';
-                } else { // High Risk: High Junk OR High Legendary
-                    if (roll > 0.5) chosenType = 'junk';
-                    else if (roll > 0.8) chosenType = 'rare';
-                    else if (roll > 0.9) chosenType = 'legendary';
-                    else chosenType = 'common';
+                    if (roll < 0.30) chosenType = 'junk';
+                    else if (roll < 0.85) chosenType = 'common';
+                    else if (roll < 0.985) chosenType = 'rare'; // 13.5% Rare
+                    else chosenType = 'legendary'; // 1.5% Legendary (Very rare)
+                } else { // High Risk: High Junk, but potential for Rare/Legendary
+                    if (roll < 0.50) chosenType = 'junk'; // 50% Junk
+                    else if (roll < 0.85) chosenType = 'common'; // 35% Common
+                    else if (roll < 0.98) chosenType = 'rare'; // 13% Rare
+                    else chosenType = 'legendary'; // 2% Legendary
                 }
 
                 const possibleItems = ITEMS_DB.filter(x => x.type === chosenType);
