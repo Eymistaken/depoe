@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Depo Savaşları: EO'nun Dükkanı</title>
+    <title>DepoE: EO'nun Dükkanı</title>
     <style>
         :root {
             --bg-color: #0f0c29;
@@ -13,6 +13,7 @@
             --danger-color: #ff4b4b;
             --success-color: #00e676;
             --eo-color: #d500f9;
+            --black-market-color: #9d00ff;
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -186,6 +187,19 @@
         }
         .storage-card h3 { margin-top: 0; color: var(--accent-color); }
 
+        .storage-card.black-market {
+            border-color: var(--black-market-color);
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
+            animation: pulse-purple 2s infinite;
+        }
+        .storage-card.black-market h3 { color: var(--black-market-color); }
+
+        @keyframes pulse-purple {
+            0% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.3); }
+            50% { box-shadow: 0 0 35px rgba(157, 0, 255, 0.6); }
+            100% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.3); }
+        }
+
         .risk-badge {
             display: inline-block;
             padding: 4px 8px;
@@ -197,6 +211,7 @@
         .risk-low { background: rgba(0, 230, 118, 0.2); color: #00e676; }
         .risk-med { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
         .risk-high { background: rgba(255, 75, 75, 0.2); color: #ff4b4b; }
+        .risk-black { background: rgba(157, 0, 255, 0.2); color: var(--black-market-color); }
 
         /* ITEM REVEAL & LISTS */
         .item-list {
@@ -362,7 +377,7 @@
 <body>
 
     <header>
-        <div class="logo">DEPO SAVAŞLARI 📦</div>
+        <div class="logo">DepoE 📦</div>
         <div class="stats">
             <div class="stat-box">
                 <span class="stat-label">🗓️ TUR</span><br>
@@ -678,25 +693,42 @@
             const risks = ['Düşük', 'Orta', 'Yüksek'];
 
             for(let i=0; i<5; i++) {
-                const riskLevel = Math.floor(Math.random() * 3); // 0, 1, 2
+                // Black Market Chance (15%)
+                let isBlackMarket = Math.random() < 0.15;
 
-                // Price calcs based on risk and some randomness
-                // Base price scales slowly with rounds to keep it playable
-                let basePrice = 500 + (gameState.round * 50);
+                let riskLevel, riskLabel, name, price, desc, className;
 
-                let priceMultiplier = 1;
-                if(riskLevel === 1) priceMultiplier = 1.5;
-                if(riskLevel === 2) priceMultiplier = 2.5;
+                if (isBlackMarket) {
+                    riskLevel = 3; // Special ID for Black Market
+                    riskLabel = "KARA BORSA";
+                    name = `Depo #${100 + i + (gameState.round * 5)} (KARA BORSA)`;
+                    className = "black-market";
 
-                const price = Math.floor(basePrice * priceMultiplier * (0.8 + Math.random() * 0.4));
+                    let basePrice = 2000 + (gameState.round * 200);
+                    price = Math.floor(basePrice * (0.8 + Math.random() * 0.4));
+                    desc = "Mor bir ışık yayıyor... İçerisi tehlikeli görünüyor.";
+                } else {
+                    riskLevel = Math.floor(Math.random() * 3); // 0, 1, 2
+                    riskLabel = risks[riskLevel];
+                    name = `Depo #${100 + i + (gameState.round * 5)}`;
+                    className = "";
+
+                    let basePrice = 500 + (gameState.round * 50);
+                    let priceMultiplier = 1;
+                    if(riskLevel === 1) priceMultiplier = 1.5;
+                    if(riskLevel === 2) priceMultiplier = 2.5;
+                    price = Math.floor(basePrice * priceMultiplier * (0.8 + Math.random() * 0.4));
+                    desc = generateUnitDescription(riskLevel);
+                }
 
                 units.push({
                     id: i,
-                    name: `Depo #${100 + i + (gameState.round * 5)}`,
-                    risk: riskLevel, // 0=Low, 1=Med, 2=High
-                    riskLabel: risks[riskLevel],
+                    name: name,
+                    risk: riskLevel, // 0=Low, 1=Med, 2=High, 3=BlackMarket
+                    riskLabel: riskLabel,
                     price: price,
-                    description: generateUnitDescription(riskLevel)
+                    description: desc,
+                    className: className
                 });
             }
             return units;
@@ -713,11 +745,14 @@
 
         function renderStorageSelection() {
             const containerHtml = gameState.availableUnits.map(unit => {
-                const riskClass = unit.risk === 0 ? 'risk-low' : (unit.risk === 1 ? 'risk-med' : 'risk-high');
+                let riskClass;
+                if(unit.risk === 3) riskClass = 'risk-black';
+                else riskClass = unit.risk === 0 ? 'risk-low' : (unit.risk === 1 ? 'risk-med' : 'risk-high');
+
                 const canAfford = gameState.money >= unit.price;
 
                 return `
-                <div class="storage-card" onclick="${canAfford ? `buyUnit(${unit.id})` : ''}" style="${!canAfford ? 'opacity:0.5; cursor:not-allowed' : ''}">
+                <div class="storage-card ${unit.className}" onclick="${canAfford ? `buyUnit(${unit.id})` : ''}" style="${!canAfford ? 'opacity:0.5; cursor:not-allowed' : ''}">
                     <h3>${unit.name}</h3>
                     <p>${unit.description}</p>
                     <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
@@ -785,6 +820,15 @@
 
             const item = gameState.inventory.find(i => i.id === id);
             gameState.money -= fee;
+
+            // 25% Chance for Fake/Junk
+            if (Math.random() < 0.25) {
+                item.type = 'junk';
+                item.name = item.name + " (SAHTE)";
+                item.realValue = Math.floor(item.realValue * 0.01); // 1% value
+                alert("EKSPERT RAPORU: Bu ürün SAHTE çıktı! Değeri düştü.");
+            }
+
             item.certified = true;
 
             updateHeader();
@@ -794,9 +838,40 @@
         // --- SHOP & NEGOTIATION ---
 
         let negotiationState = null;
+        let selectedForBulk = new Set();
 
         window.startShopPhase = function() {
+            selectedForBulk.clear();
             renderShop();
+        };
+
+        function toggleBulkSelection(id) {
+            if (selectedForBulk.has(id)) selectedForBulk.delete(id);
+            else selectedForBulk.add(id);
+            renderShop(); // Re-render to update buttons state if needed
+        }
+
+        window.sellBulk = function() {
+            if (selectedForBulk.size === 0) return;
+
+            let totalValue = 0;
+            const itemsToSell = [];
+
+            gameState.inventory.forEach(item => {
+                if(selectedForBulk.has(item.id)) {
+                    // Bulk price is 60% of base estimate (approx realValue * 0.6)
+                    totalValue += Math.floor(item.realValue * 0.6);
+                    itemsToSell.push(item.id);
+                }
+            });
+
+            if (confirm(`${itemsToSell.length} adet eşyayı toplam ${totalValue} ₺ karşılığında satmak istiyor musun?`)) {
+                gameState.money += totalValue;
+                gameState.inventory = gameState.inventory.filter(i => !selectedForBulk.has(i.id));
+                selectedForBulk.clear();
+                updateHeader();
+                renderShop();
+            }
         };
 
         function renderShop() {
@@ -819,21 +894,33 @@
 
             const listHtml = gameState.inventory.map(item => {
                 let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+                const isSelected = selectedForBulk.has(item.id);
+
                 return `
-                <div class="item-row rarity-${item.type}" style="cursor:pointer" onclick="initNegotiation(${item.id})">
-                    <div>
-                        <strong>${item.name}</strong> ${item.certified ? '<span class="certified-badge">ONAYLI</span>' : ''}<br>
-                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                <div class="item-row rarity-${item.type}">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" onchange="toggleBulkSelection(${item.id})" ${isSelected ? 'checked' : ''}>
+                        <div>
+                            <strong>${item.name}</strong> ${item.certified ? '<span class="certified-badge">ONAYLI</span>' : ''}<br>
+                            <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                        </div>
                     </div>
-                    <button class="btn" style="font-size:0.8rem">SAT 💰</button>
+                    <button class="btn" style="font-size:0.8rem" onclick="initNegotiation(${item.id})">SAT 💰</button>
                 </div>
                 `;
             }).join('');
+
+            const bulkCount = selectedForBulk.size;
 
             ui.app.innerHTML = `
                 <div class="screen screen-glass">
                     <h2>🏪 EO'NUN DÜKKANI</h2>
                     <p>EO: "${EO_AI.getLine('greeting', gameState.reputation)}"</p>
+                    <div style="text-align:right; margin-bottom:10px;">
+                        <button class="btn btn-purple" onclick="sellBulk()" ${bulkCount === 0 ? 'disabled' : ''}>
+                            🗑️ SEÇİLENLERİ TOPLU SAT (%60)
+                        </button>
+                    </div>
                     <div class="item-list">
                         ${listHtml}
                     </div>
@@ -874,13 +961,31 @@
 
                 // Logic for rare/uncertified items
                 if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
-                    initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
-                    if(repTier === 'friendly') {
-                        startDialogue = "Dostum bu çok değerli görünüyor ama sahteleri çok. Bir belgen var mı?";
-                    } else if (repTier === 'suspicious') {
-                         startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
+                    // Suspicion Check logic
+                    let suspicionChance = 0.8; // Base 80%
+                    if (gameState.reputation > 70) suspicionChance = 0.2; // 20% for Friends
+                    if (gameState.reputation > 90) suspicionChance = 0.05; // 5% for Partners
+
+                    if (Math.random() < suspicionChance) {
+                        // SUSPICIOUS: Lowball hard
+                        initialOffer = Math.floor(initialOffer * 0.3);
+                        if(repTier === 'friendly') {
+                            startDialogue = "Dostum bu çok değerli görünüyor ama sahteleri çok. Bir belgen var mı?";
+                        } else if (repTier === 'suspicious') {
+                             startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
+                        } else {
+                            startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                        }
                     } else {
-                        startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+                        // TRUSTED: Treat as if certified (better offer, normal dialogue)
+                        // Slightly reduce offer compared to certified but much better than lowball
+                        initialOffer = Math.floor(item.realValue * (0.6 + Math.random() * 0.2));
+
+                        if(repTier === 'friendly') {
+                            startDialogue = "Güzel parça! Senden geldiği için orijinalliğine güveniyorum.";
+                        } else {
+                            startDialogue = "Riskli bir parça ama sana güveneceğim. Fiyatım bu.";
+                        }
                     }
                 } else if (item.certified) {
                      initialOffer = Math.floor(initialOffer * 1.5); // Better offer
@@ -1179,7 +1284,12 @@
                 let roll = Math.random();
                 let chosenType = 'junk';
 
-                if (unit.risk === 0) { // Low Risk: Mostly Common (0.4-0.95), some Junk (<0.4), rare Rare (>0.95)
+                if (unit.risk === 3) { // Black Market: High Risk / High Reward
+                    // 40% Junk, 30% Rare, 30% Legendary
+                    if (roll < 0.40) chosenType = 'junk';
+                    else if (roll < 0.70) chosenType = 'rare';
+                    else chosenType = 'legendary';
+                } else if (unit.risk === 0) { // Low Risk: Mostly Common (0.4-0.95), some Junk (<0.4), rare Rare (>0.95)
                     if (roll < 0.40) chosenType = 'junk';
                     else if (roll < 0.95) chosenType = 'common';
                     else chosenType = 'rare'; // 5% Rare, 0% Legendary
