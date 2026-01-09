@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depo Savaşları: EO'nun Dükkanı</title>
+    <style>
+        :root {
+            --bg-color: #0f0c29;
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --text-color: #ffffff;
+            --accent-color: #ffd700; /* Gold */
+            --danger-color: #ff4b4b;
+            --success-color: #00e676;
+            --eo-color: #d500f9;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            background-size: cover;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* UTILS - GLASSMORPHISM */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .hidden { display: none !important; }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            margin: 5px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        .btn-danger:hover {
+             background: var(--danger-color);
+             box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4);
+        }
+        .btn-purple:hover {
+            background: var(--eo-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(213, 0, 249, 0.4);
+        }
+
+        .btn:disabled {
+            border-color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+            background: rgba(0,0,0,0.2);
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* HEADER */
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 100;
+        }
+        .stats {
+            display: flex;
+            gap: 25px;
+        }
+        .stat-box {
+            text-align: right;
+        }
+        .stat-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .money { color: var(--success-color); font-weight: bold; }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, #ffd700, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        /* MAIN CONTENT AREA */
+        main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Changed from center to allow scrolling if needed */
+        }
+
+        /* SCREENS */
+        .screen {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        /* Glass Panel Container for Screens */
+        .screen-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); scale: 0.95; }
+            to { opacity: 1; transform: translateY(0); scale: 1; }
+        }
+
+        /* STORAGE SELECTION */
+        .storage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .storage-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        .storage-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        .storage-card h3 { margin-top: 0; color: var(--accent-color); }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .risk-low { background: rgba(0, 230, 118, 0.2); color: #00e676; }
+        .risk-med { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .risk-high { background: rgba(255, 75, 75, 0.2); color: #ff4b4b; }
+
+        /* ITEM REVEAL & LISTS */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        .item-row {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid transparent;
+            transition: all 0.2s;
+        }
+        .item-row:hover { background: rgba(255,255,255,0.05); }
+
+        .rarity-junk { border-color: #9e9e9e; }
+        .rarity-common { border-color: var(--success-color); }
+        .rarity-rare { border-color: var(--accent-color); }
+        .rarity-legendary { border-color: #ffeb3b; background: linear-gradient(90deg, rgba(255, 235, 59, 0.1), transparent); }
+
+        .certified-badge {
+            background: var(--accent-color);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* NEGOTIATION SCENE */
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background: url('https://images.unsplash.com/photo-1550523092-234293e50669?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Dark overlay for the background image */
+        .scene-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 12, 41, 0.7);
+            z-index: 1;
+        }
+
+        .eo-avatar-container {
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .eo-avatar {
+            font-size: 80px;
+            background: radial-gradient(circle, rgba(156, 39, 176, 0.5) 0%, rgba(0,0,0,0) 70%);
+            padding: 20px;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+            text-shadow: 0 0 30px var(--eo-color);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .speech-bubble {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 20px;
+            border-bottom-left-radius: 0;
+            max-width: 60%;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 3;
+            text-align: left;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.95) transparent;
+        }
+
+        .negotiation-desk {
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .desk-item {
+            flex: 1;
+            text-align: left;
+        }
+
+        .desk-actions {
+            flex: 2;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* HUB MENU */
+        .hub-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .hub-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .hub-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+        .hub-icon { font-size: 3rem; }
+        .hub-title { font-size: 1.2rem; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">DEPO SAVAŞLARI 📦</div>
+        <div class="stats">
+            <div class="stat-box">
+                <span class="stat-label">🗓️ TUR</span><br>
+                <span id="ui-round">1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">💰 BAKİYE</span><br>
+                <span id="ui-money" class="money">1000 ₺</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">🤝 İTİBAR</span><br>
+                <span id="ui-reputation">Nötr</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app">
+        <!-- Screens will be injected here by JS -->
+        <div id="loading" class="screen">
+            <h2>Yükleniyor...</h2>
+        </div>
+    </main>
+
+    <script>
+        // --- CONFIG & CONSTANTS ---
+        const GAME_CONFIG = {
+            startMoney: 2000, // Enough for a low tier unit
+            maxRounds: 999, // Infinite for now
+        };
+
+        const RARITY = {
+            JUNK: { id: 'junk', label: 'Hurda', color: '#9e9e9e', mult: 0.5 },
+            COMMON: { id: 'common', label: 'Sıradan', color: '#4caf50', mult: 1.0 },
+            RARE: { id: 'rare', label: 'Nadir', color: '#ff9800', mult: 2.5 },
+            LEGENDARY: { id: 'legendary', label: 'Efsanevi', color: '#ffeb3b', mult: 10.0 }
+        };
+
+        const ITEMS_DB = [
+            // JUNK
+            { name: "Eski Gazete Yığını", type: "junk", baseValue: 20 },
+            { name: "Kırık Sandalye", type: "junk", baseValue: 50 },
+            { name: "Paslı Bisiklet Tekerleği", type: "junk", baseValue: 30 },
+            { name: "Küflü Kitaplar", type: "junk", baseValue: 40 },
+            { name: "Tek Ayakkabı", type: "junk", baseValue: 10 },
+            { name: "Bozuk Vantilatör", type: "junk", baseValue: 80 },
+
+            // COMMON
+            { name: "İkinci El Mikrodalga", type: "common", baseValue: 400 },
+            { name: "Ahşap Sehpa", type: "common", baseValue: 300 },
+            { name: "Kullanılmış Ders Kitapları", type: "common", baseValue: 250 },
+            { name: "Porselen Yemek Takımı (Eksik)", type: "common", baseValue: 600 },
+            { name: "Çalışan Tost Makinesi", type: "common", baseValue: 350 },
+            { name: "Balık Oltası", type: "common", baseValue: 500 },
+            { name: "Eski Model Ütü", type: "common", baseValue: 200 },
+
+            // RARE (Values Boosted for High Stakes)
+            { name: "Gümüş Çatal Bıçak Seti", type: "rare", baseValue: 5000 },
+            { name: "1990 Yapımı Oyun Konsolu", type: "rare", baseValue: 6500 },
+            { name: "İmzalı Futbol Forması", type: "rare", baseValue: 8000 },
+            { name: "Antika Cep Saati", type: "rare", baseValue: 9500 },
+            { name: "Profesyonel Kamera Lensi", type: "rare", baseValue: 7000 },
+            { name: "El Dokuması Kilim", type: "rare", baseValue: 6000 },
+
+            // LEGENDARY (Values Boosted)
+            { name: "Osmanlı Dönemi Hançer", type: "legendary", baseValue: 35000 },
+            { name: "Altın Kolye (18 Ayar)", type: "legendary", baseValue: 28000 },
+            { name: "Kapalı Kutu Son Model Laptop", type: "legendary", baseValue: 45000 },
+            { name: "Ünlü Bir Ressamın Eskizi", type: "legendary", baseValue: 60000 },
+            { name: "Elmas Yüzük", type: "legendary", baseValue: 80000 }
+        ];
+
+        // --- EO INTELLIGENCE ---
+        const EO_AI = {
+            mood: 'neutral', // neutral, happy, annoyed, angry
+            patience: 3, // Lowers with bad offers
+
+            dialogue: {
+                greeting: [
+                    "Ooo, yine mi sen? Bakalım bugün ne getirdin.",
+                    "Hoş geldin. Umarım vakit harcamaya değecek şeyler vardır.",
+                    "Çabuk ol, başka işlerim de var."
+                ],
+                inspecting: [
+                    "Hımm... Şuna bir bakalım.",
+                    "Bunun ne olduğunu bildiğine emin misin?",
+                    "İlginç... ama satılır mı emin değilim."
+                ],
+                lowball: [
+                    "Buna en fazla bu kadar veririm. İşine gelirse.",
+                    "Bak, bu piyasada bundan fazlasını bulamazsın.",
+                    "Sırf senin hatırına bu fiyatı veriyorum."
+                ],
+                accept: [
+                    "Tamamdır, anlaştık.",
+                    "Güzel, ver bakalım.",
+                    "Hah, sonunda mantıklı bir karar verdin."
+                ],
+                reject: [
+                    "Dalga mı geçiyorsun? Git işine.",
+                    "Bu fiyatla ancak kendini kandırırsın.",
+                    "Benimle oyun oynama evlat."
+                ],
+                threatResponse: [
+                    "Beni tehdit etme, zararlı çıkarsın.",
+                    "Cesaretini takdir ettim ama aptallığını değil.",
+                    "Tamam tamam, sakin ol. Belki bir şeyler yapabiliriz."
+                ]
+            },
+
+            getLine: function(category) {
+                const lines = this.dialogue[category];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+
+            // Logic to determine initial offer (always lowball)
+            calculateOffer: function(itemRealValue, reputation) {
+                // Base offer is 40-60% of real value
+                let percent = 0.4 + (Math.random() * 0.2);
+
+                // Reputation bonus (small)
+                if (reputation > 70) percent += 0.1;
+                if (reputation < 30) percent -= 0.1;
+
+                return Math.floor(itemRealValue * percent);
+            }
+        };
+
+        // --- STATE ---
+        let gameState = {
+            money: GAME_CONFIG.startMoney,
+            round: 1,
+            reputation: 50, // 0-100, 50 is neutral
+            inventory: [],
+            currentUnit: null,
+            history: [],
+            gameOver: false
+        };
+
+        // --- DOM ELEMENTS ---
+        const ui = {
+            app: document.getElementById('app'),
+            money: document.getElementById('ui-money'),
+            round: document.getElementById('ui-round'),
+            rep: document.getElementById('ui-reputation')
+        };
+
+        // --- INIT ---
+        window.onload = () => {
+            initGame();
+        };
+
+        function initGame() {
+            console.log("Oyun Başlatıldı.");
+            updateHeader();
+            startRound();
+        }
+
+        function updateHeader() {
+            ui.money.innerText = gameState.money.toLocaleString('tr-TR') + ' ₺';
+            ui.round.innerText = gameState.round;
+
+            let repText = "Nötr";
+            if (gameState.reputation > 70) repText = "Dost";
+            else if (gameState.reputation > 85) repText = "Ortak";
+            else if (gameState.reputation < 30) repText = "Şüpheli";
+            else if (gameState.reputation < 15) repText = "Düşman";
+
+            ui.rep.innerText = repText;
+            ui.rep.style.color = gameState.reputation < 30 ? 'var(--danger-color)' : (gameState.reputation > 70 ? 'var(--success-color)' : 'var(--text-color)');
+        }
+
+        // --- GAME LOGIC ---
+
+        function startRound() {
+            gameState.availableUnits = generateStorageUnits();
+
+            // Check for Game Over (Bankruptcy)
+            // If the player cannot afford the cheapest unit, they are done.
+            const cheapestUnit = Math.min(...gameState.availableUnits.map(u => u.price));
+
+            if (gameState.money < cheapestUnit) {
+                renderGameOver();
+            } else {
+                renderStorageSelection();
+            }
+        }
+
+        function renderGameOver() {
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h1 style="color: var(--danger-color)">🚫 İFLAS ETTİN</h1>
+                    <div style="font-size:3rem; margin:20px;">💸</div>
+                    <p>Cebinde kalan para: <span class="money">${gameState.money} ₺</span></p>
+                    <div class="speech-bubble" style="margin:20px auto; color:#333;">EO: "Üzgünüm dostum, burası hayır kurumu değil. Başka kapıya."</div>
+                    <p>Ulaşılan Tur: ${gameState.round}</p>
+                    <button class="btn" onclick="location.reload()">🔄 TEKRAR DENE</button>
+                </div>
+            `;
+        }
+
+        function generateStorageUnits() {
+            const units = [];
+            const risks = ['Düşük', 'Orta', 'Yüksek'];
+
+            for(let i=0; i<5; i++) {
+                const riskLevel = Math.floor(Math.random() * 3); // 0, 1, 2
+
+                // Price calcs based on risk and some randomness
+                // Base price scales slowly with rounds to keep it playable
+                let basePrice = 500 + (gameState.round * 50);
+
+                let priceMultiplier = 1;
+                if(riskLevel === 1) priceMultiplier = 1.5;
+                if(riskLevel === 2) priceMultiplier = 2.5;
+
+                const price = Math.floor(basePrice * priceMultiplier * (0.8 + Math.random() * 0.4));
+
+                units.push({
+                    id: i,
+                    name: `Depo #${100 + i + (gameState.round * 5)}`,
+                    risk: riskLevel, // 0=Low, 1=Med, 2=High
+                    riskLabel: risks[riskLevel],
+                    price: price,
+                    description: generateUnitDescription(riskLevel)
+                });
+            }
+            return units;
+        }
+
+        function generateUnitDescription(risk) {
+            const descs = [
+                ["Temiz görünüyor.", "Birkaç koli var.", "Standart ev eşyaları."], // Low
+                ["Karışık bir yığın.", "Bazı kutular kapalı.", "Tozlu ama dolu."], // Med
+                ["Tam bir muamma.", "Ya hazine ya çöp.", "Ağır kutular var."] // High
+            ];
+            return descs[risk][Math.floor(Math.random() * descs[risk].length)];
+        }
+
+        function renderStorageSelection() {
+            const containerHtml = gameState.availableUnits.map(unit => {
+                const riskClass = unit.risk === 0 ? 'risk-low' : (unit.risk === 1 ? 'risk-med' : 'risk-high');
+                const canAfford = gameState.money >= unit.price;
+
+                return `
+                <div class="storage-card" onclick="${canAfford ? `buyUnit(${unit.id})` : ''}" style="${!canAfford ? 'opacity:0.5; cursor:not-allowed' : ''}">
+                    <h3>${unit.name}</h3>
+                    <p>${unit.description}</p>
+                    <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
+                    <div style="margin-top:auto; font-size:1.4rem; font-weight:bold; color:var(--accent-color); text-shadow:0 0 10px rgba(255,215,0,0.3)">
+                        ${unit.price} ₺
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen">
+                    <h2 style="font-size:2rem; margin-bottom:10px">📢 GÜNÜN İHALESİ</h2>
+                    <p style="color:#aaa">Mevcut Bakiye: <span class="money">${gameState.money} ₺</span></p>
+                    <div class="storage-grid">
+                        ${containerHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- EXPERT PHASE ---
+
+        window.startExpertPhase = function() {
+            renderExpert();
+        };
+
+        function renderExpert() {
+             const listHtml = gameState.inventory.map(item => {
+                let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+                const fee = Math.max(50, Math.floor(item.realValue * 0.05));
+                const canAfford = gameState.money >= fee;
+
+                return `
+                <div class="item-row rarity-${item.type}">
+                    <div>
+                        <strong>${item.name}</strong> ${item.certified ? '✅' : ''}<br>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        ${item.certified
+                            ? `<span style="color:var(--success-color); font-weight:bold;">DEĞER: ${item.realValue} ₺</span>`
+                            : `<button class="btn" style="font-size:0.8rem" onclick="certifyItem(${item.id}, ${fee})" ${!canAfford ? 'disabled' : ''}>ONAYLAT (-${fee}₺)</button>`
+                        }
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h2>🧐 EKSPERTİZ BÜROSU</h2>
+                    <p>Burada şüpheli eşyaların orijinalliğini kanıtlayabilirsin. Onaylı eşyalar EO karşısında daha değerli olur.</p>
+                    <p>Paran: <span class="money">${gameState.money} ₺</span></p>
+                    <div class="item-list">
+                        ${listHtml}
+                    </div>
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                </div>
+            `;
+        }
+
+        window.certifyItem = function(id, fee) {
+            if (gameState.money < fee) return;
+
+            const item = gameState.inventory.find(i => i.id === id);
+            gameState.money -= fee;
+            item.certified = true;
+
+            updateHeader();
+            renderExpert();
+        };
+
+        // --- SHOP & NEGOTIATION ---
+
+        let negotiationState = null;
+
+        window.startShopPhase = function() {
+            renderShop();
+        };
+
+        function renderShop() {
+            // If inventory empty, suggest leaving
+            if (gameState.inventory.length === 0) {
+                ui.app.innerHTML = `
+                    <div class="screen screen-glass">
+                        <h2>🏪 DÜKKAN BOŞ</h2>
+                        <p>Satacak bir şeyin kalmadı.</p>
+                        <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (negotiationState) {
+                renderNegotiation();
+                return;
+            }
+
+            const listHtml = gameState.inventory.map(item => {
+                let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+                return `
+                <div class="item-row rarity-${item.type}" style="cursor:pointer" onclick="initNegotiation(${item.id})">
+                    <div>
+                        <strong>${item.name}</strong> ${item.certified ? '<span class="certified-badge">ONAYLI</span>' : ''}<br>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                    </div>
+                    <button class="btn" style="font-size:0.8rem">SAT 💰</button>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h2>🏪 EO'NUN DÜKKANI</h2>
+                    <p>EO: "${EO_AI.getLine('greeting')}"</p>
+                    <div class="item-list">
+                        ${listHtml}
+                    </div>
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                </div>
+            `;
+        }
+
+        window.initNegotiation = function(itemId) {
+            const item = gameState.inventory.find(i => i.id === itemId);
+            let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
+            let startDialogue = "Ooo, bunu mu satıyorsun? Bakalım kaç para eder...";
+
+            // Logic for rare/uncertified items
+            if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
+                initialOffer = Math.floor(initialOffer * 0.3); // Lowball hard
+                startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
+            } else if (item.certified) {
+                 initialOffer = Math.floor(initialOffer * 1.5); // Better offer
+                 startDialogue = "Belgesi var demek... Güzel. O zaman ciddi konuşalım.";
+            }
+
+            negotiationState = {
+                item: item,
+                currentOffer: initialOffer,
+                eoPatience: EO_AI.patience,
+                status: 'active', // active, sold, failed
+                lastMove: 'start',
+                dialogue: startDialogue
+            };
+
+            renderNegotiation();
+        };
+
+        function renderNegotiation() {
+            const state = negotiationState;
+            const item = state.item;
+            const rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+            const playerKnowsValue = item.certified;
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass" style="max-width:1000px; padding:0;">
+                    <div class="scene-container">
+                        <div class="scene-overlay"></div>
+                        <div class="eo-avatar-container">
+                             <div class="eo-avatar">👺</div>
+                             <div class="speech-bubble">"${state.dialogue}"</div>
+                        </div>
+
+                        <div class="negotiation-desk">
+                            <div class="desk-item">
+                                <h3 style="margin:0; color:var(--accent-color)">${item.name}</h3>
+                                <div style="font-size:0.8rem; opacity:0.8">${rarityInfo.label} ${item.certified ? '✅' : ''}</div>
+                                <div style="margin-top:5px; font-weight:bold; color:var(--success-color)">TEKLİF: ${state.currentOffer} ₺</div>
+                                ${playerKnowsValue ? `<div style="font-size:0.7rem; color:#aaa">Gerçek Değer: ${item.realValue} ₺</div>` : ''}
+                            </div>
+
+                            <div class="desk-actions">
+                                <button class="btn" onclick="actionAccept()">✅ KABUL (${state.currentOffer} ₺)</button>
+                                <button class="btn" onclick="showCounterInput()">💬 PAZARLIK</button>
+                                <button class="btn btn-purple" onclick="actionBluff()">🎲 BLÖF</button>
+                                <button class="btn btn-danger" onclick="actionThreaten()">🤬 TEHDİT</button>
+                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()">❌ VAZGEÇ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.actionAccept = function() {
+            // Sell item
+            gameState.money += negotiationState.currentOffer;
+
+            // Log logic could be here
+
+            // Remove item
+            gameState.inventory = gameState.inventory.filter(i => i.id !== negotiationState.item.id);
+
+            // Reputation small boost for easy deal
+            changeReputation(1);
+
+            negotiationState = null;
+            updateHeader();
+            renderShop();
+        };
+
+        window.actionCancel = function() {
+            negotiationState = null;
+            renderShop();
+        };
+
+        window.showCounterInput = function() {
+            const currentOffer = negotiationState.currentOffer;
+            const promptAmount = prompt("Karşı teklifin nedir? (Sadece sayı)", currentOffer);
+            if (promptAmount) {
+                const val = parseInt(promptAmount);
+                if (!isNaN(val)) {
+                    processCounterOffer(val);
+                }
+            }
+        };
+
+        function processCounterOffer(playerOffer) {
+            const state = negotiationState;
+            const item = state.item;
+            const realValue = item.realValue;
+
+            // Logic: Is the offer reasonable?
+            let maxTolerable = realValue * (1.0 + (gameState.reputation / 200));
+
+            // Certification Logic: If rare/legendary and NOT certified, he won't pay near full value
+            // unless forced or convinced.
+            if ((item.type === 'rare' || item.type === 'legendary') && !item.certified) {
+                maxTolerable = realValue * 0.5; // He knows it might be real, but won't risk paying for it without proof
+            }
+
+            // Hidden Interest Mechanic
+            if (item.eoInterest === 2) {
+                // He really wants it, so he will tolerate higher prices eventually
+                maxTolerable *= 1.5;
+            } else if (item.eoInterest === 1) {
+                maxTolerable *= 1.2;
+            }
+
+            if (playerOffer <= state.currentOffer) {
+                state.dialogue = "Daha düşük teklif mi? Kafan mı güzel? Neyse, kabul.";
+                state.currentOffer = playerOffer;
+                renderNegotiation();
+                return;
+            }
+
+            if (playerOffer <= maxTolerable) {
+                // Success chance based on how greedy the player is
+                const greedFactor = playerOffer / realValue; // 1.0 = fair, 1.2 = pushing it
+                const roll = Math.random();
+
+                if (roll > (greedFactor - 0.5)) {
+                    // Accepted
+                    state.currentOffer = playerOffer;
+
+                    if (item.eoInterest === 2) {
+                         state.dialogue = "Tamam tamam, alıyorum. Sakın kimseye bu fiyattan bahsetme.";
+                    } else {
+                         state.dialogue = EO_AI.getLine('accept');
+                    }
+                } else {
+                    // Counter-counter
+                    const middleGround = Math.floor((state.currentOffer + playerOffer) / 2);
+                    state.currentOffer = middleGround;
+                    state.dialogue = "Çok istiyorsun. Şurada buluşalım.";
+                    state.eoPatience -= 1;
+                }
+            } else {
+                // Insultingly high
+                state.dialogue = EO_AI.getLine('reject');
+                state.eoPatience -= 1;
+            }
+
+            checkPatience();
+            renderNegotiation();
+        }
+
+        window.actionBluff = function() {
+            const state = negotiationState;
+            // Bluff mechanics: Try to increase perceived value
+            const roll = Math.random();
+            const successChance = 0.4 + (gameState.reputation / 200);
+
+            if (roll < successChance) {
+                // Success
+                state.currentOffer = Math.floor(state.currentOffer * 1.5);
+                state.dialogue = "Hmm... Gerçekten mi? Bak bunu fark etmemiştim. Fiyatı arttırıyorum.";
+            } else {
+                // Fail
+                state.dialogue = "Kimi kandırıyorsun sen? Bu numara bana sökmez.";
+                state.eoPatience -= 2;
+                changeReputation(-5);
+            }
+            checkPatience();
+            renderNegotiation();
+        };
+
+        window.actionThreaten = function() {
+            const state = negotiationState;
+            // High risk
+            const roll = Math.random();
+            if (roll > 0.7) {
+                // Success: Force max value
+                state.currentOffer = Math.floor(state.item.realValue * 1.2);
+                state.dialogue = EO_AI.getLine('threatResponse');
+                changeReputation(-10); // Reputation hit even if successful
+            } else {
+                // Fail: EO ends negotiation
+                state.dialogue = "Defol dükkanımdan!";
+                state.eoPatience = 0;
+            }
+            checkPatience();
+            renderNegotiation();
+        };
+
+        function checkPatience() {
+            if (negotiationState.eoPatience <= 0) {
+                // Force sell at low price or kick out?
+                // For now, let's say he forces the last offer or kicks out.
+                // Let's make him withdraw the offer and offer a pity amount (scrap value).
+                negotiationState.dialogue = "Sabrımı taşırdın. Ya bu fiyata alırsın ya da defolursun.";
+                negotiationState.currentOffer = Math.floor(negotiationState.item.baseValue * 0.1); // 10% scrap value
+                // Lock buttons maybe? For simplicity, we just set the offer low and let player accept/leave.
+            }
+        }
+
+        // --- HELPERS ---
+        function changeReputation(amount) {
+            gameState.reputation = Math.min(100, Math.max(0, gameState.reputation + amount));
+        }
+
+        function finishRound() {
+            gameState.round++;
+            gameState.availableUnits = [];
+            ui.app.innerHTML = `
+                <div class="screen">
+                    <h2>TUR TAMAMLANDI</h2>
+                    <p>Bugünkü hasılatı topladın.</p>
+                    <p class="money" style="font-size:2rem">${gameState.money} ₺</p>
+                    <button class="btn" onclick="startRound()">SONRAKİ TUR</button>
+                </div>
+            `;
+            updateHeader();
+        }
+
+        window.buyUnit = function(id) {
+            const unit = gameState.availableUnits.find(u => u.id === id);
+            if(gameState.money < unit.price) return;
+
+            gameState.money -= unit.price;
+            gameState.currentUnit = unit;
+            updateHeader();
+
+            // Generate items
+            gameState.inventory = generateItemsForUnit(unit);
+
+            revealItems();
+        };
+
+        function generateItemsForUnit(unit) {
+            const itemCount = 3 + Math.floor(Math.random() * 3); // 3-5 items
+            const items = [];
+
+            for(let i=0; i<itemCount; i++) {
+                // Determine rarity based on risk
+                let roll = Math.random();
+                let chosenType = 'junk';
+
+                if (unit.risk === 0) { // Low Risk: Mostly Common, some Junk
+                    if (roll > 0.3) chosenType = 'common';
+                    if (roll > 0.9) chosenType = 'rare';
+                } else if (unit.risk === 1) { // Med Risk: Balanced
+                    if (roll > 0.2) chosenType = 'common';
+                    if (roll > 0.7) chosenType = 'rare';
+                    if (roll > 0.95) chosenType = 'legendary';
+                } else { // High Risk: High Junk OR High Legendary
+                    if (roll > 0.5) chosenType = 'junk';
+                    else if (roll > 0.8) chosenType = 'rare';
+                    else if (roll > 0.9) chosenType = 'legendary';
+                    else chosenType = 'common';
+                }
+
+                const possibleItems = ITEMS_DB.filter(x => x.type === chosenType);
+                const template = possibleItems[Math.floor(Math.random() * possibleItems.length)];
+
+                // Variation in value
+                const valueVariation = 0.8 + (Math.random() * 0.4); // +/- 20%
+                const finalValue = Math.floor(template.baseValue * valueVariation);
+
+                items.push({
+                    ...template,
+                    realValue: finalValue,
+                    eoInterest: Math.random() > 0.8 ? 2 : (Math.random() > 0.5 ? 1 : 0), // 0=None, 1=Mild, 2=High
+                    id: Date.now() + i
+                });
+            }
+            return items;
+        }
+
+        function revealItems() {
+            const listHtml = gameState.inventory.map(item => {
+                let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+                return `
+                <div class="item-row rarity-${item.type}">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span style="color:#888; font-size:0.9rem">Tahmini: ???</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen">
+                    <h2>DEPODAN ÇIKANLAR</h2>
+                    <div class="item-list">
+                        ${listHtml}
+                    </div>
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHİR MERKEZİNE GİT</button>
+                </div>
+            `;
+        }
+
+        window.startHubPhase = function() {
+            renderHub();
+        };
+
+        function renderHub() {
+             ui.app.innerHTML = `
+                <div class="screen">
+                    <h2>🏙️ ŞEHİR MERKEZİ</h2>
+                    <p>Ne yapmak istersin?</p>
+
+                    <div class="hub-menu">
+                        <div class="hub-card" onclick="startShopPhase()">
+                            <div class="hub-icon">🏪</div>
+                            <div class="hub-title">EO'nun Dükkanı</div>
+                            <div>Eşyaları sat ve pazarlık yap.</div>
+                        </div>
+
+                        <div class="hub-card" onclick="startExpertPhase()">
+                            <div class="hub-icon">🧐</div>
+                            <div class="hub-title">Ekspertiz</div>
+                            <div>Eşyaları onaylat ve değerini öğren.</div>
+                        </div>
+
+                        <div class="hub-card" onclick="finishRound()" style="border-color:var(--success-color)">
+                            <div class="hub-icon">💤</div>
+                            <div class="hub-title">Günü Bitir</div>
+                            <div>Sonraki tura geç.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+    </script>
+</body>
+</html>
