@@ -585,7 +585,38 @@
                     "Beni tehdit etme, zararlı çıkarsın.",
                     "Cesaretini takdir ettim ama aptallığını değil.",
                     "Tamam tamam, sakin ol. Belki bir şeyler yapabiliriz."
-                ]
+                ],
+                consulting_start: {
+                    friendly: [
+                        "Senden bu kadar kaliteli bir şey çıkmaz ama, neyse... Gidip bir ${itemName} uzmanıma danışıp geleyim.",
+                        "Tipine bakınca dolandırıcı gibisin ama mal gerçek gibi. Dur bi ${itemName} uzmanıma danışıp geleyim.",
+                        "Bunu çöpten bulmadığına emin misin? Bekle, ${itemName} uzmanıma danışıp geleyim."
+                    ],
+                    neutral: [
+                        "Bunu bir ${itemName} uzmanıma danışıp geleyim. Bekle burada.",
+                        "Bir dakka, şunu hemen ${itemName} uzmanıma danışıp geliyorum.",
+                        "Bekle biraz, şunu bi ${itemName} uzmanıma danışıp geleyim."
+                    ],
+                    suspicious: [
+                        "Gözüm seni hiç tutmadı. Bu ${itemName} uzmanıma göstermeden almam.",
+                        "Eğer sahteyse başın derde girer. Gidip ${itemName} uzmanıma danışıp geleyim.",
+                        "Malına güvenmiyorum, sana hiç güvenmiyorum. Mecburen ${itemName} uzmanıma danışıp geleyim."
+                    ]
+                },
+                consulting_end: {
+                    friendly: [
+                        "Arkadaşım baktı, sorun yokmuş. Şaşırtıcı... Hadi fiyatı konuşalım.",
+                        "Tamamdır, onay verdi. Hadi yine iyisin."
+                    ],
+                    neutral: [
+                        "Uzmanım inceledi. Tamamdır, pazarlığa geçelim.",
+                        "Geldim. Uzmanımla konuştum, bir sıkıntı yok."
+                    ],
+                    suspicious: [
+                        "Uzmanım gerçek dedi ama benim hala şüphelerim var. Neyse.",
+                        "Şimdilik inandım say. Ama gözüm üzerinde."
+                    ]
+                }
             },
 
             getLine: function(category, reputation) {
@@ -966,6 +997,17 @@
                 if (gameState.reputation > 70) repTier = 'friendly';
                 else if (gameState.reputation < 30) repTier = 'suspicious';
 
+                // --- EXPERT CONSULTATION TRIGGER ---
+                let isConsulting = false;
+                let consultChance = 0.3; // Default Neutral
+                if (repTier === 'friendly') consultChance = 0.1;
+                else if (repTier === 'suspicious') consultChance = 0.6;
+
+                if (Math.random() < consultChance) {
+                    isConsulting = true;
+                }
+                // -----------------------------------
+
                 let initialOffer = EO_AI.calculateOffer(item.realValue, gameState.reputation);
                 let startDialogue = EO_AI.getLine('inspecting', gameState.reputation);
 
@@ -1020,16 +1062,39 @@
                      }
                 }
 
+                // If consulting, override dialogue
+                if (isConsulting) {
+                     const lines = EO_AI.dialogue.consulting_start[repTier];
+                     const rawLine = lines[Math.floor(Math.random() * lines.length)];
+                     startDialogue = rawLine.replace("${itemName}", item.name);
+                }
+
                 negotiationState = {
                     item: item,
                     currentOffer: initialOffer,
                     status: 'active', // active, sold, failed
                     lastMove: 'start',
-                    dialogue: startDialogue
+                    dialogue: startDialogue,
+                    isConsulting: isConsulting
                 };
 
                 // Save immediately
                 saveNegotiationState();
+
+                // Handle the timer if consulting
+                if (isConsulting) {
+                    setTimeout(() => {
+                         // Check if we are still negotiating the same item
+                         if(negotiationState && negotiationState.item.id === item.id && negotiationState.isConsulting) {
+                             negotiationState.isConsulting = false;
+                             negotiationState.dialogue = EO_AI.getLine('consulting_end', gameState.reputation);
+
+                             // Update memory to reflect we returned
+                             saveNegotiationState();
+                             renderNegotiation();
+                         }
+                    }, 5000);
+                }
             }
 
             renderNegotiation();
@@ -1051,6 +1116,9 @@
             const rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
             const playerKnowsValue = item.certified;
 
+            // Check consulting state
+            const isConsulting = state.isConsulting;
+
             // Patience Visualization
             let patienceHtml = '';
             for(let i=0; i<4; i++) {
@@ -1064,7 +1132,10 @@
                     <div class="scene-container">
                         <div class="scene-overlay"></div>
                         <div class="eo-avatar-container">
-                             <div class="eo-avatar">👺</div>
+                             ${isConsulting
+                                ? `<div style="height:120px; display:flex; align-items:center; justify-content:center; color:#ccc; font-style:italic; font-size:1.2rem; text-shadow:0 0 10px rgba(0,0,0,0.8);">(Uzman aranıyor...)</div>`
+                                : `<div class="eo-avatar">👺</div>`
+                             }
                              <div class="speech-bubble">"${state.dialogue}"</div>
                              <div style="margin-top:10px; font-size:1.2rem; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:10px;">
                                 SABIR: ${patienceHtml}
@@ -1080,11 +1151,11 @@
                             </div>
 
                             <div class="desk-actions">
-                                <button class="btn" onclick="actionAccept()">✅ KABUL (${state.currentOffer} ₺)</button>
-                                <button class="btn" onclick="showCounterInput()" ${patienceLow ? 'disabled' : ''}>💬 PAZARLIK</button>
-                                <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow ? 'disabled' : ''}>🎲 BLÖF</button>
-                                <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow ? 'disabled' : ''}>🤬 TEHDİT</button>
-                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()">❌ VAZGEÇ</button>
+                                <button class="btn" onclick="actionAccept()" ${isConsulting ? 'disabled' : ''}>✅ KABUL (${state.currentOffer} ₺)</button>
+                                <button class="btn" onclick="showCounterInput()" ${patienceLow || isConsulting ? 'disabled' : ''}>💬 PAZARLIK</button>
+                                <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow || isConsulting ? 'disabled' : ''}>🎲 BLÖF</button>
+                                <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow || isConsulting ? 'disabled' : ''}>🤬 TEHDİT</button>
+                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()" ${isConsulting ? 'disabled' : ''}>❌ VAZGEÇ</button>
                             </div>
                         </div>
                     </div>
