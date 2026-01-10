@@ -932,6 +932,7 @@
                     <div class="storage-grid">
                         ${containerHtml}
                     </div>
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
                 </div>
             `;
         }
@@ -1782,6 +1783,12 @@
                     ` : ''}
 
                     <div class="hub-menu">
+                        <div class="hub-card" onclick="renderStorageSelection()">
+                            <div class="hub-icon">📢</div>
+                            <div class="hub-title">İhale Alanı</div>
+                            <div>Kalan depoları incele ve satın al.</div>
+                        </div>
+
                         <div class="hub-card" onclick="startShopPhase()">
                             <div class="hub-icon">🏪</div>
                             <div class="hub-title">EO'nun Dükkanı</div>
