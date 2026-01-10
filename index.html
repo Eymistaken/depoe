@@ -490,6 +490,38 @@
             { name: "Safir Taşlı Broş", type: "legendary", baseValue: 65000 }
         ];
 
+        // --- SKILLS CONFIGURATION ---
+        const SKILLS_CONFIG = {
+            xray: {
+                id: 'xray',
+                name: 'Röntgen Gözler',
+                maxLevel: 3,
+                cost: 1,
+                desc: 'Kutuların riskini daha iyi analiz etme şansı sağlar.'
+            },
+            silverTongue: {
+                id: 'silverTongue',
+                name: 'Tatlı Dil',
+                maxLevel: 3,
+                cost: 1,
+                desc: 'Pazarlıkta EO\'nun sabrını daha az tüketirsin.'
+            },
+            restorer: {
+                id: 'restorer',
+                name: 'Usta Tamirci',
+                maxLevel: 5,
+                cost: 1,
+                desc: 'Atölyede hurda eşyaları onarma şansını artırır.'
+            },
+            hoarder: {
+                id: 'hoarder',
+                name: 'İstifçi',
+                maxLevel: 5,
+                cost: 1,
+                desc: 'Depo kapasitesini kalıcı olarak +5 artırır.'
+            }
+        };
+
         // --- EO INTELLIGENCE ---
         const EO_AI = {
             mood: 'neutral', // neutral, happy, annoyed, angry
@@ -657,7 +689,20 @@
             history: [],
             gameOver: false,
             eoPatience: 4, // Max 4 per round
-            negotiationMemory: {} // Remembers offers per item
+            negotiationMemory: {}, // Remembers offers per item
+            // NEW FIELDS
+            xp: 0,
+            level: 1,
+            skillPoints: 0,
+            skills: {
+                xray: 0,
+                silverTongue: 0,
+                restorer: 0,
+                hoarder: 0
+            },
+            quests: [], // Active quests
+            inventoryLimit: 10,
+            storageLevel: 1
         };
 
         // --- DOM ELEMENTS ---
@@ -695,8 +740,84 @@
 
         // --- GAME LOGIC ---
 
+        // XP SYSTEM
+        function addXp(amount) {
+            gameState.xp += amount;
+            const xpNeeded = gameState.level * 1000;
+            if (gameState.xp >= xpNeeded) {
+                gameState.level++;
+                gameState.xp -= xpNeeded;
+                gameState.skillPoints++;
+                alert(`🎉 TEBRİKLER! Seviye Atladın! Yeni Seviye: ${gameState.level}. +1 Yetenek Puanı kazandın.`);
+            }
+            updateHeader();
+        }
+
+        // QUEST SYSTEM
+        function generateQuests() {
+            gameState.quests = [];
+            const questCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
+            const categories = ["Elektronik", "Antika", "Giyim", "Mobilya", "Spor"];
+
+            for(let i=0; i<questCount; i++) {
+                const isSellQuest = Math.random() > 0.5;
+                if (isSellQuest) {
+                    const type = Math.random() > 0.7 ? 'rare' : 'common';
+                    const targetCount = 1 + Math.floor(Math.random() * 2);
+                    const rewardMult = type === 'rare' ? 2 : 1;
+                    gameState.quests.push({
+                        id: Date.now() + i,
+                        text: `${targetCount} adet ${type === 'rare' ? 'Nadir' : 'Sıradan'} eşya sat`,
+                        type: 'sell_rarity',
+                        target: type,
+                        count: targetCount,
+                        current: 0,
+                        rewardMoney: 500 * targetCount * rewardMult,
+                        rewardXp: 100 * targetCount * rewardMult
+                    });
+                } else {
+                    const cat = categories[Math.floor(Math.random() * categories.length)];
+                    const targetCount = 1 + Math.floor(Math.random() * 2);
+                    gameState.quests.push({
+                        id: Date.now() + i,
+                        text: `${targetCount} adet ${cat} kategorisinde eşya sat`,
+                        type: 'sell_category',
+                        target: cat,
+                        count: targetCount,
+                        current: 0,
+                        rewardMoney: 400 * targetCount,
+                        rewardXp: 80 * targetCount
+                    });
+                }
+            }
+        }
+
+        function checkQuestProgress(item) {
+            let completedAny = false;
+            gameState.quests.forEach(q => {
+                if (q.completed) return;
+
+                let match = false;
+                if (q.type === 'sell_rarity' && item.type === q.target) match = true;
+                if (q.type === 'sell_category' && item.category === q.target) match = true;
+
+                if (match) {
+                    q.current++;
+                    if (q.current >= q.count) {
+                        q.completed = true;
+                        gameState.money += q.rewardMoney;
+                        addXp(q.rewardXp);
+                        alert(`✅ GÖREV TAMAMLANDI: ${q.text}\nÖdül: ${q.rewardMoney}₺, ${q.rewardXp} XP`);
+                        completedAny = true;
+                    }
+                }
+            });
+            if(completedAny) updateHeader();
+        }
+
         function startRound() {
             gameState.availableUnits = generateStorageUnits();
+            generateQuests(); // New quests every round
 
             // Determine Patience based on Reputation
             if (gameState.reputation > 70) gameState.eoPatience = 4;
@@ -1430,15 +1551,235 @@
             `;
         }
 
+        // --- WORKSHOP SYSTEM ---
+        window.startWorkshopPhase = function() {
+            renderWorkshop();
+        };
+
+        function renderWorkshop() {
+            const junkItems = gameState.inventory.filter(i => i.type === 'junk');
+            const repairCost = 200;
+            const canAfford = gameState.money >= repairCost;
+
+            // Restorer Skill Chance
+            const skillLevel = gameState.skills.restorer || 0;
+            const successChance = Math.min(0.9, 0.3 + (skillLevel * 0.15));
+
+            const listHtml = junkItems.map(item => `
+                <div class="item-row rarity-junk">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <span style="color:#9e9e9e; font-size:0.8rem">Hurda</span>
+                    </div>
+                    <button class="btn" onclick="repairItem(${item.id})" ${!canAfford ? 'disabled' : ''}>
+                        🔨 ONAR (${repairCost}₺) %${Math.round(successChance * 100)}
+                    </button>
+                </div>
+            `).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h2>🛠️ ATÖLYE</h2>
+                    <p>Hurda eşyaları onarmayı dene. Başarısız olursan eşya yok olur!</p>
+                    <p>Paran: <span class="money">${gameState.money} ₺</span></p>
+
+                    ${junkItems.length === 0 ? '<p>Onarılacak hurda yok.</p>' : `<div class="item-list">${listHtml}</div>`}
+
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                </div>
+            `;
+        }
+
+        window.repairItem = function(itemId) {
+            if (gameState.money < 200) return;
+            gameState.money -= 200;
+
+            const itemIndex = gameState.inventory.findIndex(i => i.id === itemId);
+            if (itemIndex === -1) return;
+            const item = gameState.inventory[itemIndex];
+
+            // Success Check
+            const skillLevel = gameState.skills.restorer || 0;
+            const successChance = Math.min(0.9, 0.3 + (skillLevel * 0.15));
+
+            if (Math.random() < successChance) {
+                // Success! Convert to Common or Rare
+                const isRare = Math.random() < 0.3; // 30% chance for Rare upgrade
+                const newType = isRare ? 'rare' : 'common';
+
+                // Update Item
+                item.type = newType;
+                item.name = item.name.replace(' (Hurda)', '').replace('Kırık ', 'Onarılmış ').replace('Bozuk ', 'Tamir Edilmiş ');
+                if (!item.name.includes('Onarılmış') && !item.name.includes('Tamir Edilmiş')) {
+                    item.name = "Onarılmış " + item.name;
+                }
+
+                // Update Value
+                const baseVal = isRare ? 5000 : 500;
+                item.realValue = Math.floor(baseVal * (0.8 + Math.random() * 0.4));
+                item.certified = false; // Reset certification
+
+                alert(`🎉 BAŞARILI! Eşya onarıldı: ${item.name}`);
+            } else {
+                // Fail - Destroy
+                gameState.inventory.splice(itemIndex, 1);
+                alert("💥 BAŞARISIZ! Eşya parçalarına ayrıldı ve yok oldu.");
+            }
+            updateHeader();
+            renderWorkshop();
+        };
+
+        // --- SKILL SYSTEM ---
+        window.startSkillsPhase = function() {
+            renderSkills();
+        };
+
+        function renderSkills() {
+            const skillHtml = Object.values(SKILLS_CONFIG).map(skill => {
+                const currentLvl = gameState.skills[skill.id] || 0;
+                const canUpgrade = currentLvl < skill.maxLevel && gameState.skillPoints >= skill.cost;
+
+                return `
+                <div class="item-row" style="background:rgba(255,255,255,0.05); flex-direction:column; align-items:flex-start; gap:10px;">
+                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size:1.1rem; color:var(--accent-color)">${skill.name}</strong>
+                            <span style="font-size:0.8rem; margin-left:10px; background:#333; padding:2px 6px; border-radius:4px;">Lvl ${currentLvl}/${skill.maxLevel}</span>
+                        </div>
+                        <button class="btn btn-purple" onclick="purchaseSkill('${skill.id}')" ${!canUpgrade ? 'disabled' : ''}>
+                            ${currentLvl >= skill.maxLevel ? 'MAX' : `YÜKSELT (${skill.cost} Puan)`}
+                        </button>
+                    </div>
+                    <p style="margin:0; opacity:0.8; font-size:0.9rem">${skill.desc}</p>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h2>🧠 YETENEKLER</h2>
+                    <p>Seviye atlayarak yetenek puanı kazan.</p>
+                    <p>Mevcut Puan: <span style="color:var(--accent-color); font-weight:bold; font-size:1.5rem;">${gameState.skillPoints}</span></p>
+
+                    <div class="item-list">
+                        ${skillHtml}
+                    </div>
+
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                </div>
+            `;
+        }
+
+        window.purchaseSkill = function(skillId) {
+            const skill = SKILLS_CONFIG[skillId];
+            if (!skill) return;
+            const currentLvl = gameState.skills[skillId] || 0;
+
+            if (currentLvl < skill.maxLevel && gameState.skillPoints >= skill.cost) {
+                gameState.skillPoints -= skill.cost;
+                gameState.skills[skillId]++;
+
+                // Immediate Effects
+                if (skillId === 'hoarder') {
+                    gameState.inventoryLimit += 5;
+                    alert("Depo kapasitesi artırıldı!");
+                }
+
+                renderSkills();
+            }
+        };
+
+        // --- WAREHOUSE SYSTEM ---
+        window.startWarehousePhase = function() {
+            renderWarehouse();
+        };
+
+        function renderWarehouse() {
+            const upgradeCost = 5000 * gameState.storageLevel;
+            const canAfford = gameState.money >= upgradeCost;
+
+            const listHtml = gameState.inventory.map(item => {
+                let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
+                return `
+                <div class="item-row rarity-${item.type}" style="padding:10px;">
+                    <div style="font-size:0.9rem">
+                        <strong>${item.name}</strong> (${rarityInfo.label})
+                    </div>
+                    <div style="font-size:0.8rem; color:#aaa;">
+                        ${item.certified ? `Değer: ${item.realValue} ₺` : 'Değer: ???'}
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass">
+                    <h2>📦 DEPO YÖNETİMİ</h2>
+                    <div style="display:flex; justify-content:space-around; margin:20px 0;">
+                        <div>
+                            <div class="stat-label">KAPASİTE</div>
+                            <div style="font-size:1.5rem">${gameState.inventory.length} / ${gameState.inventoryLimit}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">GÜNLÜK KİRA</div>
+                            <div style="font-size:1.5rem; color:var(--danger-color)">${gameState.inventory.length * 50} ₺</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-purple" onclick="upgradeStorage()" ${!canAfford ? 'disabled' : ''}>
+                        ⬆️ DEPOYU BÜYÜT (+5 Yer) - ${upgradeCost} ₺
+                    </button>
+
+                    <h3 style="margin-top:30px; text-align:left;">Envanter</h3>
+                    <div class="item-list" style="max-height:300px; overflow-y:auto;">
+                        ${listHtml}
+                    </div>
+
+                    <button class="btn" onclick="startHubPhase()">🏙️ ŞEHRE DÖN</button>
+                </div>
+            `;
+        }
+
+        window.upgradeStorage = function() {
+            const upgradeCost = 5000 * gameState.storageLevel;
+            if (gameState.money >= upgradeCost) {
+                gameState.money -= upgradeCost;
+                gameState.inventoryLimit += 5;
+                gameState.storageLevel++;
+                alert("Depo büyütüldü! Yeni kapasite: " + gameState.inventoryLimit);
+                updateHeader();
+                renderWarehouse();
+            }
+        };
+
         window.startHubPhase = function() {
             renderHub();
         };
 
         function renderHub() {
+             // Quest Display
+             const questsHtml = gameState.quests.map(q =>
+                 `<div style="font-size:0.85rem; background:rgba(255,255,255,0.05); padding:8px; border-radius:5px; margin-bottom:5px; text-align:left; border-left:3px solid ${q.completed ? 'var(--success-color)' : 'var(--accent-color)'}">
+                    ${q.completed ? '✅' : '📜'} ${q.text} (${q.current}/${q.count})
+                 </div>`
+             ).join('');
+
              ui.app.innerHTML = `
                 <div class="screen">
-                    <h2>🏙️ ŞEHİR MERKEZİ</h2>
-                    <p>Ne yapmak istersin?</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>🏙️ ŞEHİR MERKEZİ</h2>
+                        <div style="text-align:right;">
+                            <span style="font-size:0.9rem; color:var(--accent-color)">Seviye ${gameState.level}</span><br>
+                            <span style="font-size:0.8rem; opacity:0.7">${gameState.xp}/${gameState.level * 1000} XP</span>
+                        </div>
+                    </div>
+
+                    ${gameState.quests.length > 0 ? `
+                        <div style="margin-bottom:20px;">
+                            <h4 style="margin:5px 0; text-align:left; opacity:0.8;">GÜNLÜK GÖREVLER</h4>
+                            ${questsHtml}
+                        </div>
+                    ` : ''}
 
                     <div class="hub-menu">
                         <div class="hub-card" onclick="startShopPhase()">
@@ -1451,6 +1792,24 @@
                             <div class="hub-icon">🧐</div>
                             <div class="hub-title">Ekspertiz</div>
                             <div>Eşyaları onaylat ve değerini öğren.</div>
+                        </div>
+
+                        <div class="hub-card" onclick="startWorkshopPhase()">
+                            <div class="hub-icon">🛠️</div>
+                            <div class="hub-title">Atölye</div>
+                            <div>Hurda eşyaları onar.</div>
+                        </div>
+
+                        <div class="hub-card" onclick="startSkillsPhase()">
+                            <div class="hub-icon">🧠</div>
+                            <div class="hub-title">Yetenekler</div>
+                            <div>Karakterini geliştir.</div>
+                        </div>
+
+                        <div class="hub-card" onclick="startWarehousePhase()">
+                            <div class="hub-icon">📦</div>
+                            <div class="hub-title">Depo</div>
+                            <div>Envanterini yönet.</div>
                         </div>
 
                         <div class="hub-card" onclick="finishRound()" style="border-color:var(--success-color)">
