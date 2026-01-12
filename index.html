@@ -382,6 +382,106 @@
         .hub-icon { font-size: 3rem; }
         .hub-title { font-size: 1.2rem; font-weight: bold; }
 
+        /* AUCTION SCREEN */
+        .auction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .auction-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .auction-visual {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--glass-border);
+        }
+        .current-bid-display {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--success-color);
+            text-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
+        }
+        .timer-display {
+            font-size: 1.5rem;
+            color: var(--danger-color);
+            font-weight: bold;
+            margin-top: 10px;
+            height: 30px;
+        }
+
+        .opponents-grid {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .opponent-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 12px;
+            width: 80px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .opponent-card.active-bidder {
+            border-color: var(--accent-color);
+            background: rgba(255, 215, 0, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .opponent-card.folded {
+            opacity: 0.3;
+            filter: grayscale(1);
+        }
+        .opponent-avatar { font-size: 2.5rem; }
+        .opponent-name { font-size: 0.7rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .last-action {
+            position: absolute;
+            top: -10px; right: -10px;
+            background: var(--accent-color);
+            color: #000;
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .bid-log {
+            background: rgba(0,0,0,0.5);
+            height: 150px;
+            overflow-y: auto;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--glass-border);
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+        .log-entry.high-bid { color: var(--success-color); font-weight: bold; }
+        .log-entry.fold { color: var(--danger-color); font-style: italic; }
+
+        .player-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -488,6 +588,14 @@
             { name: "Viking Dönemi Balta Ucu", type: "legendary", baseValue: 70000 },
             { name: "Kripto Cüzdan (Şifresi Üstünde)", type: "legendary", baseValue: 120000 },
             { name: "Safir Taşlı Broş", type: "legendary", baseValue: 65000 }
+        ];
+
+        // --- OPPONENTS ---
+        const OPPONENTS = [
+            { id: 'yilong', name: 'Yilong Ma', avatar: '🚀', wealth: 999999, aggressive: 0.9, patience: 2, desc: 'Teknoloji Milyarderi' },
+            { id: 'hasan', name: 'Hurdacı Hasan', avatar: '🧢', wealth: 5000, aggressive: 0.3, patience: 5, desc: 'Eski Toprak' },
+            { id: 'daniel', name: 'Jew Daniel', avatar: '💎', wealth: 50000, aggressive: 0.7, patience: 4, desc: 'Kuyumcu' },
+            { id: 'cilem', name: 'Bitmeyen Çilem', avatar: '🚬', wealth: 2000, aggressive: 0.1, patience: 1, desc: 'Şanssız' }
         ];
 
         // --- SKILLS CONFIGURATION ---
@@ -690,6 +798,7 @@
             gameOver: false,
             eoPatience: 4, // Max 4 per round
             negotiationMemory: {}, // Remembers offers per item
+            auction: null, // Active auction state
             // NEW FIELDS
             xp: 0,
             level: 1,
@@ -858,39 +967,55 @@
                 // Black Market Chance (3%)
                 let isBlackMarket = Math.random() < 0.03;
 
-                let riskLevel, riskLabel, name, price, desc, className;
+                let riskLevel, riskLabel, name, desc, className;
+                let estimatedMin, estimatedMax;
 
                 if (isBlackMarket) {
                     riskLevel = 3; // Special ID for Black Market
                     riskLabel = "KARA BORSA";
                     name = `Depo #${100 + i + (gameState.round * 5)} (KARA BORSA)`;
                     className = "black-market";
-
-                    let basePrice = 15000 + (gameState.round * 2000);
-                    price = Math.floor(basePrice * (0.8 + Math.random() * 0.4));
                     desc = "Kırmızı bir ışık yayıyor... İçerisi tehlikeli görünüyor.";
+
+                    let baseVal = 15000 + (gameState.round * 2000);
+                    // Black market estimate is always huge range
+                    estimatedMin = Math.floor(baseVal * 0.5);
+                    estimatedMax = Math.floor(baseVal * 3.0);
+
                 } else {
                     riskLevel = Math.floor(Math.random() * 3); // 0, 1, 2
                     riskLabel = risks[riskLevel];
                     name = `Depo #${100 + i + (gameState.round * 5)}`;
                     className = "";
-
-                    let basePrice = 500 + (gameState.round * 50);
-                    let priceMultiplier = 1;
-                    if(riskLevel === 1) priceMultiplier = 1.5;
-                    if(riskLevel === 2) priceMultiplier = 2.5;
-                    price = Math.floor(basePrice * priceMultiplier * (0.8 + Math.random() * 0.4));
                     desc = generateUnitDescription(riskLevel);
+
+                    let baseVal = 500 + (gameState.round * 50);
+                    if(riskLevel === 1) baseVal *= 1.5;
+                    if(riskLevel === 2) baseVal *= 2.5;
+
+                    // Accuracy Logic
+                    if (riskLevel === 0) { // Low Risk: Accurate
+                        estimatedMin = Math.floor(baseVal * 0.9);
+                        estimatedMax = Math.floor(baseVal * 1.1);
+                    } else if (riskLevel === 1) { // Med Risk: Balanced
+                        estimatedMin = Math.floor(baseVal * 0.7);
+                        estimatedMax = Math.floor(baseVal * 1.4);
+                    } else { // High Risk: Wild
+                        estimatedMin = Math.floor(baseVal * 0.4);
+                        estimatedMax = Math.floor(baseVal * 2.5);
+                    }
                 }
 
                 units.push({
                     id: i,
                     name: name,
-                    risk: riskLevel, // 0=Low, 1=Med, 2=High, 3=BlackMarket
+                    risk: riskLevel,
                     riskLabel: riskLabel,
-                    price: price,
+                    estimatedMin: estimatedMin,
+                    estimatedMax: estimatedMax,
                     description: desc,
-                    className: className
+                    className: className,
+                    soldTo: null // Tracks if AI bought it
                 });
             }
             return units;
@@ -905,22 +1030,386 @@
             return descs[risk][Math.floor(Math.random() * descs[risk].length)];
         }
 
+        // --- AUCTION SYSTEM ---
+
+        window.startAuction = function(unitId) {
+            const unit = gameState.availableUnits.find(u => u.id === unitId);
+            if (!unit) return;
+
+            // Initialize Auction State
+            const startBid = Math.floor((unit.estimatedMin + unit.estimatedMax) / 2 * 0.5);
+
+            gameState.auction = {
+                unit: unit,
+                currentBid: startBid,
+                highestBidder: null, // null = no one yet (or house)
+                timer: 0, // 0=Waiting, 1=Going Once, 2=Going Twice, 3=Sold
+                timerInterval: null,
+                participants: OPPONENTS.map(op => ({
+                    ...op,
+                    isFolded: false,
+                    lastAction: null // 'bid', 'pass', 'wait'
+                })),
+                log: [`İhale başladı! Başlangıç fiyatı: ${startBid} ₺`],
+                playerFolded: false,
+                lastBidTime: Date.now()
+            };
+
+            // Player is not in "participants" array for AI logic simplicity,
+            // but we track player state via gameState.auction.playerFolded
+
+            renderAuction();
+            // Start the loop
+            if (gameState.auction.timerInterval) clearInterval(gameState.auction.timerInterval);
+            gameState.auction.timerInterval = setInterval(updateAuctionLoop, 1000);
+        };
+
+        function renderAuction() {
+            const auc = gameState.auction;
+            if(!auc) return;
+
+            // Header Info
+            const unit = auc.unit;
+
+            // Timer Text
+            let timerText = "Teklif Bekleniyor...";
+            if (auc.timer === 1) timerText = "SATILIYOR... (1)";
+            if (auc.timer === 2) timerText = "SATILIYOR... (2)";
+            if (auc.timer === 3) timerText = "SATILDI!";
+
+            // Participants HTML
+            const opponentsHtml = auc.participants.map(p => {
+                const isLeader = auc.highestBidder && auc.highestBidder.id === p.id;
+                const statusClass = p.isFolded ? 'folded' : (isLeader ? 'active-bidder' : '');
+                const actionDisplay = p.lastAction ? `<div class="last-action" style="display:block">${p.lastAction}</div>` : '';
+
+                return `
+                <div class="opponent-card ${statusClass}">
+                    ${actionDisplay}
+                    <div class="opponent-avatar">${p.avatar}</div>
+                    <div class="opponent-name">${p.name}</div>
+                    ${isLeader ? '<div style="font-size:0.7rem; color:var(--success-color); font-weight:bold;">LİDER</div>' : ''}
+                </div>
+                `;
+            }).join('');
+
+            // Log HTML
+            const logHtml = auc.log.map(entry => {
+                const isHigh = entry.includes('teklif');
+                const isFold = entry.includes('çekildi');
+                const className = isHigh ? 'high-bid' : (isFold ? 'fold' : '');
+                return `<div class="log-entry ${className}">${entry}</div>`;
+            }).join(''); // Reversing handled by flex-direction or just inserting at top? Array unshift is better.
+
+            // Player Controls
+            const playerIsLeader = auc.highestBidder && auc.highestBidder.id === 'player';
+            const canBid = !auc.playerFolded && gameState.money >= (auc.currentBid + 50) && auc.timer < 3;
+
+            ui.app.innerHTML = `
+                <div class="screen screen-glass" style="max-width:1000px">
+                    <div class="auction-header">
+                        <div>
+                            <h2 style="margin:0">${unit.name}</h2>
+                            <div style="font-size:0.9rem; opacity:0.7">Tahmini: ${unit.estimatedMin} - ${unit.estimatedMax} ₺</div>
+                        </div>
+                        <div class="money">${gameState.money} ₺</div>
+                    </div>
+
+                    <div class="auction-main">
+                        <div class="auction-visual">
+                            <div style="font-size:1.2rem; color:#aaa; margin-bottom:10px;">GÜNCEL TEKLİF</div>
+                            <div class="current-bid-display">${auc.currentBid} ₺</div>
+                            <div class="timer-display">${timerText}</div>
+                            ${playerIsLeader ? '<div style="color:var(--success-color); font-weight:bold; margin-top:10px;">🏆 ŞU AN KAZANIYORSUN!</div>' : ''}
+                        </div>
+
+                        <div class="opponents-grid">
+                            ${opponentsHtml}
+                            <!-- Player Card -->
+                            <div class="opponent-card ${auc.playerFolded ? 'folded' : (playerIsLeader ? 'active-bidder' : '')}">
+                                <div class="opponent-avatar">👤</div>
+                                <div class="opponent-name">SEN</div>
+                                ${playerIsLeader ? '<div style="font-size:0.7rem; color:var(--success-color); font-weight:bold;">LİDER</div>' : ''}
+                            </div>
+                        </div>
+
+                        <div class="bid-log" id="auction-log">
+                            ${logHtml}
+                        </div>
+
+                        <div class="player-controls">
+                            <button class="btn" onclick="placePlayerBid(50)" ${!canBid ? 'disabled' : ''}>+50 ₺</button>
+                            <button class="btn" onclick="placePlayerBid(200)" ${!canBid ? 'disabled' : ''}>+200 ₺</button>
+                            <button class="btn btn-danger" onclick="playerFold()" ${auc.playerFolded || auc.timer >= 3 ? 'disabled' : ''}>ÇEKİL 🏳️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Auto scroll log
+            const logEl = document.getElementById('auction-log');
+            if(logEl) logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        window.placePlayerBid = function(amount) {
+            const auc = gameState.auction;
+            if(!auc || auc.playerFolded) return;
+
+            const nextBid = auc.currentBid + amount;
+            if(gameState.money < nextBid) {
+                alert("Yetersiz bakiye!");
+                return;
+            }
+
+            placeBid('player', nextBid);
+        };
+
+        window.playerFold = function() {
+            const auc = gameState.auction;
+            if(!auc) return;
+
+            auc.playerFolded = true;
+            auc.log.push(`🏳️ Sen ihaleden çekildin.`);
+            renderAuction();
+        };
+
+        function updateAuctionLoop() {
+            const auc = gameState.auction;
+            if(!auc) return;
+
+            // Timer Logic
+            const now = Date.now();
+            const timeSinceLastBid = now - auc.lastBidTime;
+
+            // Simple state machine for timer
+            // If < 3 sec: Waiting
+            // > 3 sec: Going Once
+            // > 6 sec: Going Twice
+            // > 9 sec: Sold
+
+            if (timeSinceLastBid > 9000) {
+                auc.timer = 3; // SOLD
+                clearInterval(auc.timerInterval);
+                endAuction();
+            } else if (timeSinceLastBid > 6000) {
+                auc.timer = 2; // Going Twice
+            } else if (timeSinceLastBid > 3000) {
+                auc.timer = 1; // Going Once
+            } else {
+                auc.timer = 0; // Waiting
+            }
+
+            // Reset action displays
+            auc.participants.forEach(p => p.lastAction = null);
+
+            // Process AI (if not sold)
+            if (auc.timer < 3) {
+                 processAIBidding();
+            }
+
+            renderAuction();
+        }
+
+        function processAIBidding() {
+            const auc = gameState.auction;
+            // Only one AI bids per tick max to avoid chaos, or random chance
+            if (Math.random() < 0.6) return; // 60% chance no one acts this tick
+
+            // Shuffle participants to randomise order
+            const activeAI = auc.participants.filter(p => !p.isFolded && p.id !== (auc.highestBidder ? auc.highestBidder.id : ''));
+            if (activeAI.length === 0) return;
+
+            const ai = activeAI[Math.floor(Math.random() * activeAI.length)];
+
+            // Decision Logic
+            const unit = auc.unit;
+            // Calculate Limit based on Personality
+
+            // Base Perception of value (imperfect)
+            // Low risk = accurate, High risk = wild guess
+            // We use the estimatedMin/Max to derive what AI "thinks" it's worth
+            // But we already have the range. Let's define a "perceivedLimit" per AI.
+
+            if (!ai.perceivedLimit) {
+                // Initialize limit once
+                let estimateAvg = (unit.estimatedMin + unit.estimatedMax) / 2;
+                let riskFactor = 1;
+                if (unit.risk === 1) riskFactor = 1.2;
+                if (unit.risk === 2) riskFactor = 1.5;
+                if (unit.risk === 3) riskFactor = 2.0; // Black market
+
+                switch(ai.id) {
+                    case 'yilong': // Crazy, rich, troll
+                        // Can go way above max estimate just because
+                        ai.perceivedLimit = unit.estimatedMax * (1 + Math.random() * 2);
+                        break;
+                    case 'hasan': // Scrap dealer, very conservative
+                        // Never pays more than min estimate or slightly above
+                        ai.perceivedLimit = unit.estimatedMin * (0.8 + Math.random() * 0.3);
+                        break;
+                    case 'daniel': // Smart, calculates margin
+                        // Aiming for 20% profit margin assumed on max estimate
+                        ai.perceivedLimit = unit.estimatedMax * 0.8;
+                        break;
+                    case 'cilem': // Pessimist, poor
+                        // Folds early
+                        ai.perceivedLimit = unit.estimatedMin * (0.5 + Math.random() * 0.4);
+                        break;
+                }
+            }
+
+            // Logic to Bid or Fold
+            const nextMinBid = auc.currentBid + 50;
+
+            // Check budget
+            if (nextMinBid > ai.wealth) {
+                ai.isFolded = true;
+                auc.log.push(`${ai.avatar} ${ai.name} parasızlıktan çekildi.`);
+                return;
+            }
+
+            // Check Limit
+            if (nextMinBid > ai.perceivedLimit) {
+                // Yilong might troll and go over limit sometimes (10%)
+                if (ai.id === 'yilong' && Math.random() < 0.1) {
+                     // Troll bid
+                } else {
+                    ai.isFolded = true;
+                    // auc.log.push(`${ai.avatar} ${ai.name} çekildi.`); // Don't spam log with silent folds? Or show it?
+                    // Let's show it in log
+                    auc.log.push(`${ai.avatar} ${ai.name} çekildi.`);
+                    return;
+                }
+            }
+
+            // Yilong "Wait" Logic: He might skip bidding even if he can
+            if (ai.id === 'yilong' && Math.random() < 0.3) {
+                // He waits this turn
+                return;
+            }
+
+            // Place Bid
+            // Decide increment: Small or Large?
+            let increment = 50;
+            if (ai.aggressive > 0.5 && Math.random() < 0.5) increment = 200;
+
+            // Yilong sometimes does crazy jumps
+            if (ai.id === 'yilong' && Math.random() < 0.2) increment = 500;
+
+            placeBid(ai.id, auc.currentBid + increment);
+        }
+
+        function placeBid(bidderId, amount) {
+            const auc = gameState.auction;
+            if(auc.timer >= 3) return; // Closed
+
+            // Update State
+            auc.currentBid = amount;
+
+            if (bidderId === 'player') {
+                auc.highestBidder = { id: 'player', name: 'SEN' };
+                auc.log.push(`👤 SEN ${amount} ₺ teklif verdin!`);
+            } else {
+                const ai = auc.participants.find(p => p.id === bidderId);
+                auc.highestBidder = ai;
+                auc.log.push(`${ai.avatar} ${ai.name} ${amount} ₺ teklif verdi!`);
+                ai.lastAction = 'BID';
+            }
+
+            // Reset Timer
+            auc.lastBidTime = Date.now();
+            auc.timer = 0;
+            renderAuction();
+        }
+
+        function endAuction() {
+            const auc = gameState.auction;
+            const winner = auc.highestBidder;
+
+            if (winner && winner.id === 'player') {
+                // Player Won
+                if (gameState.money >= auc.currentBid) {
+                    // Successful purchase
+                    // We need to trigger the buy logic manually since the old buyUnit function checks price
+                    // We need a modified buy function that accepts the bid price
+                    completePlayerPurchase(auc.unit, auc.currentBid);
+                } else {
+                    // Should not happen due to button checks, but just in case
+                    alert("Hata: Yetersiz Bakiye!");
+                    renderStorageSelection();
+                }
+            } else if (winner) {
+                // AI Won
+                alert(`İhaleyi ${winner.name} kazandı! Fiyat: ${auc.currentBid} ₺`);
+
+                // Mark unit as sold
+                auc.unit.soldTo = winner;
+                renderStorageSelection();
+            } else {
+                // No one bid? (Rare/Impossible with logic)
+                alert("Kimse teklif vermedi. İhale iptal.");
+                renderStorageSelection();
+            }
+
+            // Clear auction state
+            gameState.auction = null;
+        }
+
+        function completePlayerPurchase(unit, finalPrice) {
+            gameState.money -= finalPrice;
+            gameState.currentUnit = unit;
+            updateHeader();
+
+            // Generate items
+            const newItems = generateItemsForUnit(unit);
+            gameState.inventory.push(...newItems);
+
+            // Remove unit from available list? Or mark as sold to player?
+            // Original logic removed it from "availableUnits" implicitly by regenerating or just showing the reveal screen.
+            // But if we want to return to the list later, we should mark it.
+            // However, the game flow is: Buy -> Reveal -> Hub. So we don't need to persist it in the list for this round usually.
+            // But let's follow the standard 'revealItems' flow which replaces the screen.
+
+            revealItems(newItems);
+        }
+
         function renderStorageSelection() {
             const containerHtml = gameState.availableUnits.map(unit => {
                 let riskClass;
                 if(unit.risk === 3) riskClass = 'risk-black';
                 else riskClass = unit.risk === 0 ? 'risk-low' : (unit.risk === 1 ? 'risk-med' : 'risk-high');
 
-                const canAfford = gameState.money >= unit.price;
+                const isSold = unit.soldTo !== null;
+                // Min start bid is approx 50% of avg estimate, checking afford based on that
+                const startBid = Math.floor((unit.estimatedMin + unit.estimatedMax) / 2 * 0.5);
+                const canAfford = gameState.money >= startBid;
 
-                return `
-                <div class="storage-card ${unit.className}" onclick="${canAfford ? `buyUnit(${unit.id})` : ''}" style="${!canAfford ? 'opacity:0.5; cursor:not-allowed' : ''}">
+                let cardContent = `
                     <h3>${unit.name}</h3>
                     <p>${unit.description}</p>
                     <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
-                    <div class="unit-price" style="margin-top:auto; font-size:1.4rem; font-weight:bold; color:var(--accent-color); text-shadow:0 0 10px rgba(255,215,0,0.3)">
-                        ${unit.price} ₺
+                    <div class="unit-price" style="margin-top:auto; font-size:1.1rem; color:#ccc;">
+                        Tahmini: <span style="color:var(--accent-color); font-weight:bold;">${unit.estimatedMin} - ${unit.estimatedMax} ₺</span>
                     </div>
+                `;
+
+                let clickAction = "";
+                let cardStyle = "";
+
+                if (isSold) {
+                    cardContent += `<div style="margin-top:10px; color:var(--danger-color); font-weight:bold; border:2px solid var(--danger-color); padding:5px; border-radius:5px; transform:rotate(-5deg);">SATILDI: ${unit.soldTo.name}</div>`;
+                    cardStyle = "opacity:0.6; filter:grayscale(0.8); cursor:default;";
+                } else {
+                    if (canAfford) {
+                        clickAction = `onclick="startAuction(${unit.id})"`;
+                    } else {
+                        cardStyle = "opacity:0.5; cursor:not-allowed;";
+                    }
+                }
+
+                return `
+                <div class="storage-card ${unit.className}" ${clickAction} style="${cardStyle}">
+                    ${cardContent}
                 </div>
                 `;
             }).join('');
