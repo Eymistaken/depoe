@@ -482,6 +482,43 @@
             margin-top: 20px;
         }
 
+        /* SPEECH BUBBLES FOR AUCTION */
+        .mini-bubble {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--accent-color);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border-bottom-left-radius: 0;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 100;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            box-shadow: 0 0 15px var(--accent-color);
+            text-shadow: none;
+            font-weight: normal;
+        }
+
+        .mini-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            border-width: 6px 6px 0;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.9) transparent;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateX(-50%) scale(0.5); }
+            to { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+
     </style>
 </head>
 <body>
@@ -597,6 +634,29 @@
             { id: 'daniel', name: 'Jew Daniel', avatar: '💎', wealth: 50000, aggressive: 0.7, patience: 4, desc: 'Kuyumcu' },
             { id: 'cilem', name: 'Bitmeyen Çilem', avatar: '🚬', wealth: 2000, aggressive: 0.1, patience: 1, desc: 'Şanssız' }
         ];
+
+        const OPPONENT_LINES = {
+            yilong: {
+                bid: ["To the moon! 🚀", "Pocket change.", "Buying this for Mars.", "Stonks only go up!"],
+                fold: ["Boring.", "Not worth my time.", "Paper hands..."],
+                random: ["Have you seen my rocket?", "Doge is up today.", "I should tweet about this."]
+            },
+            hasan: {
+                bid: ["Hadi bakalım.", "Ederi bu.", "Paslı ama olsun.", "Alırım bunu."],
+                fold: ["Çok pahalı.", "Hurda parasına gitmez.", "Beni aşar.", "Yaramaz bu."],
+                random: ["Eskiden buralar hep dutluktu.", "Hurda demir kaç para oldu?", "Çay var mı çay?"]
+            },
+            daniel: {
+                bid: ["Hesaplıyorum...", "Marjinal değer artıyor.", "Yatırım tavsiyesidir.", "Tam değerinde."],
+                fold: ["Matematik tutmuyor.", "Risk/Ödül oranı düşük.", "Bu fiyata zarar yazar.", "Ben yokum."],
+                random: ["Altın bugün düştü mü?", "Karatı düşük bunun.", "Hesap makinem nerede?"]
+            },
+            cilem: {
+                bid: ["Belki şansım döner...", "Param yetmez ama...", "Son kuruşum.", "Ah be..."],
+                fold: ["Zaten kazanamam.", "Param yetmez ki.", "Yine kaybettim.", "Şansım yok."],
+                random: ["Bugün hava da kapalı.", "Kesin içinden çöp çıkacak.", "Neden geldim ki?"]
+            }
+        };
 
         // --- SKILLS CONFIGURATION ---
         const SKILLS_CONFIG = {
@@ -1052,58 +1112,31 @@
                 })),
                 log: [`İhale başladı! Başlangıç fiyatı: ${startBid} ₺`],
                 playerFolded: false,
-                lastBidTime: Date.now()
+                lastBidTime: Date.now(),
+                lastLogIndex: 0
             };
 
-            // Player is not in "participants" array for AI logic simplicity,
-            // but we track player state via gameState.auction.playerFolded
+            setupAuctionUI();
 
-            renderAuction();
             // Start the loop
             if (gameState.auction.timerInterval) clearInterval(gameState.auction.timerInterval);
             gameState.auction.timerInterval = setInterval(updateAuctionLoop, 1000);
         };
 
-        function renderAuction() {
+        function setupAuctionUI() {
             const auc = gameState.auction;
-            if(!auc) return;
-
-            // Header Info
             const unit = auc.unit;
-
-            // Timer Text
-            let timerText = "Teklif Bekleniyor...";
-            if (auc.timer === 1) timerText = "SATILIYOR... (1)";
-            if (auc.timer === 2) timerText = "SATILIYOR... (2)";
-            if (auc.timer === 3) timerText = "SATILDI!";
 
             // Participants HTML
             const opponentsHtml = auc.participants.map(p => {
-                const isLeader = auc.highestBidder && auc.highestBidder.id === p.id;
-                const statusClass = p.isFolded ? 'folded' : (isLeader ? 'active-bidder' : '');
-                const actionDisplay = p.lastAction ? `<div class="last-action" style="display:block">${p.lastAction}</div>` : '';
-
                 return `
-                <div class="opponent-card ${statusClass}">
-                    ${actionDisplay}
+                <div id="opponent-card-${p.id}" class="opponent-card">
                     <div class="opponent-avatar">${p.avatar}</div>
                     <div class="opponent-name">${p.name}</div>
-                    ${isLeader ? '<div style="font-size:0.7rem; color:var(--success-color); font-weight:bold;">LİDER</div>' : ''}
+                    <div id="leader-badge-${p.id}" style="font-size:0.7rem; color:var(--success-color); font-weight:bold; display:none;">LİDER</div>
                 </div>
                 `;
             }).join('');
-
-            // Log HTML
-            const logHtml = auc.log.map(entry => {
-                const isHigh = entry.includes('teklif');
-                const isFold = entry.includes('çekildi');
-                const className = isHigh ? 'high-bid' : (isFold ? 'fold' : '');
-                return `<div class="log-entry ${className}">${entry}</div>`;
-            }).join(''); // Reversing handled by flex-direction or just inserting at top? Array unshift is better.
-
-            // Player Controls
-            const playerIsLeader = auc.highestBidder && auc.highestBidder.id === 'player';
-            const canBid = !auc.playerFolded && gameState.money >= (auc.currentBid + 50) && auc.timer < 3;
 
             ui.app.innerHTML = `
                 <div class="screen screen-glass" style="max-width:1000px">
@@ -1118,37 +1151,147 @@
                     <div class="auction-main">
                         <div class="auction-visual">
                             <div style="font-size:1.2rem; color:#aaa; margin-bottom:10px;">GÜNCEL TEKLİF</div>
-                            <div class="current-bid-display">${auc.currentBid} ₺</div>
-                            <div class="timer-display">${timerText}</div>
-                            ${playerIsLeader ? '<div style="color:var(--success-color); font-weight:bold; margin-top:10px;">🏆 ŞU AN KAZANIYORSUN!</div>' : ''}
+                            <div id="auction-current-bid" class="current-bid-display">${auc.currentBid} ₺</div>
+                            <div id="auction-timer-text" class="timer-display">Teklif Bekleniyor...</div>
+                            <div id="player-win-msg" style="color:var(--success-color); font-weight:bold; margin-top:10px; display:none;">🏆 ŞU AN KAZANIYORSUN!</div>
                         </div>
 
                         <div class="opponents-grid">
                             ${opponentsHtml}
                             <!-- Player Card -->
-                            <div class="opponent-card ${auc.playerFolded ? 'folded' : (playerIsLeader ? 'active-bidder' : '')}">
+                            <div id="opponent-card-player" class="opponent-card">
                                 <div class="opponent-avatar">👤</div>
                                 <div class="opponent-name">SEN</div>
-                                ${playerIsLeader ? '<div style="font-size:0.7rem; color:var(--success-color); font-weight:bold;">LİDER</div>' : ''}
+                                <div id="leader-badge-player" style="font-size:0.7rem; color:var(--success-color); font-weight:bold; display:none;">LİDER</div>
                             </div>
                         </div>
 
                         <div class="bid-log" id="auction-log">
-                            ${logHtml}
+                            <div class="log-entry">${auc.log[0]}</div>
                         </div>
 
                         <div class="player-controls">
-                            <button class="btn" onclick="placePlayerBid(50)" ${!canBid ? 'disabled' : ''}>+50 ₺</button>
-                            <button class="btn" onclick="placePlayerBid(200)" ${!canBid ? 'disabled' : ''}>+200 ₺</button>
-                            <button class="btn btn-danger" onclick="playerFold()" ${auc.playerFolded || auc.timer >= 3 ? 'disabled' : ''}>ÇEKİL 🏳️</button>
+                            <button id="btn-bid-50" class="btn" onclick="placePlayerBid(50)">+50 ₺</button>
+                            <button id="btn-bid-200" class="btn" onclick="placePlayerBid(200)">+200 ₺</button>
+                            <button id="btn-fold" class="btn btn-danger" onclick="playerFold()">ÇEKİL 🏳️</button>
                         </div>
                     </div>
                 </div>
             `;
 
-            // Auto scroll log
-            const logEl = document.getElementById('auction-log');
-            if(logEl) logEl.scrollTop = logEl.scrollHeight;
+            // Set initial lastLogIndex
+            auc.lastLogIndex = 1;
+        }
+
+        function updateAuctionUI() {
+            const auc = gameState.auction;
+            if(!auc) return;
+
+            // Update Bid Text
+            document.getElementById('auction-current-bid').innerText = auc.currentBid + ' ₺';
+
+            // Update Timer Text
+            let timerText = "Teklif Bekleniyor...";
+            if (auc.timer === 1) timerText = "SATILIYOR... (1)";
+            if (auc.timer === 2) timerText = "SATILIYOR... (2)";
+            if (auc.timer === 3) timerText = "SATILDI!";
+            document.getElementById('auction-timer-text').innerText = timerText;
+
+            // Update Participants Visuals
+            auc.participants.forEach(p => {
+                const card = document.getElementById(`opponent-card-${p.id}`);
+                const badge = document.getElementById(`leader-badge-${p.id}`);
+
+                if (card) {
+                    // Classes
+                    if (p.isFolded) {
+                        card.classList.add('folded');
+                        card.classList.remove('active-bidder');
+                    } else if (auc.highestBidder && auc.highestBidder.id === p.id) {
+                        card.classList.add('active-bidder');
+                        card.classList.remove('folded');
+                    } else {
+                        card.classList.remove('active-bidder', 'folded');
+                    }
+                }
+
+                if (badge) {
+                    badge.style.display = (auc.highestBidder && auc.highestBidder.id === p.id) ? 'block' : 'none';
+                }
+            });
+
+            // Update Player Visuals
+            const pCard = document.getElementById('opponent-card-player');
+            const pBadge = document.getElementById('leader-badge-player');
+            const pWinMsg = document.getElementById('player-win-msg');
+            const isPlayerLeader = auc.highestBidder && auc.highestBidder.id === 'player';
+
+            if (pCard) {
+                if (auc.playerFolded) {
+                    pCard.classList.add('folded');
+                    pCard.classList.remove('active-bidder');
+                } else if (isPlayerLeader) {
+                    pCard.classList.add('active-bidder');
+                    pCard.classList.remove('folded');
+                } else {
+                    pCard.classList.remove('active-bidder', 'folded');
+                }
+            }
+
+            if (pBadge) pBadge.style.display = isPlayerLeader ? 'block' : 'none';
+            if (pWinMsg) pWinMsg.style.display = isPlayerLeader ? 'block' : 'none';
+
+            // Update Buttons
+            const canBid = !auc.playerFolded && gameState.money >= (auc.currentBid + 50) && auc.timer < 3;
+            document.getElementById('btn-bid-50').disabled = !canBid;
+            document.getElementById('btn-bid-200').disabled = !canBid;
+            document.getElementById('btn-fold').disabled = (auc.playerFolded || auc.timer >= 3);
+
+            // Update Log (Append only)
+            const logContainer = document.getElementById('auction-log');
+            if (logContainer && auc.lastLogIndex < auc.log.length) {
+                for (let i = auc.lastLogIndex; i < auc.log.length; i++) {
+                    const entry = auc.log[i];
+                    const isHigh = entry.includes('teklif');
+                    const isFold = entry.includes('çekildi');
+                    const className = isHigh ? 'high-bid' : (isFold ? 'fold' : '');
+
+                    const div = document.createElement('div');
+                    div.className = `log-entry ${className}`;
+                    div.innerText = entry;
+                    logContainer.appendChild(div);
+                }
+                auc.lastLogIndex = auc.log.length;
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+
+        function showSpeech(id, type) {
+            const linesObj = OPPONENT_LINES[id];
+            if (!linesObj) return;
+
+            const lines = linesObj[type];
+            if (!lines || lines.length === 0) return;
+
+            const text = lines[Math.floor(Math.random() * lines.length)];
+
+            const card = document.getElementById(`opponent-card-${id}`);
+            if (!card) return;
+
+            // Remove existing bubble if any
+            const existing = card.querySelector('.mini-bubble');
+            if (existing) existing.remove();
+
+            const bubble = document.createElement('div');
+            bubble.className = 'mini-bubble';
+            bubble.innerText = text;
+
+            card.appendChild(bubble);
+
+            setTimeout(() => {
+                bubble.style.opacity = '0';
+                setTimeout(() => bubble.remove(), 300);
+            }, 3000);
         }
 
         window.placePlayerBid = function(amount) {
@@ -1170,7 +1313,7 @@
 
             auc.playerFolded = true;
             auc.log.push(`🏳️ Sen ihaleden çekildin.`);
-            renderAuction();
+            updateAuctionUI();
         };
 
         function updateAuctionLoop() {
@@ -1181,16 +1324,11 @@
             const now = Date.now();
             const timeSinceLastBid = now - auc.lastBidTime;
 
-            // Simple state machine for timer
-            // If < 3 sec: Waiting
-            // > 3 sec: Going Once
-            // > 6 sec: Going Twice
-            // > 9 sec: Sold
-
             if (timeSinceLastBid > 9000) {
                 auc.timer = 3; // SOLD
+                updateAuctionUI(); // Final update
                 clearInterval(auc.timerInterval);
-                endAuction();
+                setTimeout(endAuction, 500); // Small delay to see SOLD state
             } else if (timeSinceLastBid > 6000) {
                 auc.timer = 2; // Going Twice
             } else if (timeSinceLastBid > 3000) {
@@ -1199,15 +1337,21 @@
                 auc.timer = 0; // Waiting
             }
 
-            // Reset action displays
-            auc.participants.forEach(p => p.lastAction = null);
+            // Random Speech Chance (Idle)
+            if (Math.random() < 0.05) { // 5% per second
+                const active = auc.participants.filter(p => !p.isFolded);
+                if (active.length > 0) {
+                    const speaker = active[Math.floor(Math.random() * active.length)];
+                    showSpeech(speaker.id, 'random');
+                }
+            }
 
             // Process AI (if not sold)
             if (auc.timer < 3) {
                  processAIBidding();
             }
 
-            renderAuction();
+            updateAuctionUI();
         }
 
         function processAIBidding() {
@@ -1223,12 +1367,6 @@
 
             // Decision Logic
             const unit = auc.unit;
-            // Calculate Limit based on Personality
-
-            // Base Perception of value (imperfect)
-            // Low risk = accurate, High risk = wild guess
-            // We use the estimatedMin/Max to derive what AI "thinks" it's worth
-            // But we already have the range. Let's define a "perceivedLimit" per AI.
 
             if (!ai.perceivedLimit) {
                 // Initialize limit once
@@ -1240,19 +1378,15 @@
 
                 switch(ai.id) {
                     case 'yilong': // Crazy, rich, troll
-                        // Can go way above max estimate just because
                         ai.perceivedLimit = unit.estimatedMax * (1 + Math.random() * 2);
                         break;
                     case 'hasan': // Scrap dealer, very conservative
-                        // Never pays more than min estimate or slightly above
                         ai.perceivedLimit = unit.estimatedMin * (0.8 + Math.random() * 0.3);
                         break;
                     case 'daniel': // Smart, calculates margin
-                        // Aiming for 20% profit margin assumed on max estimate
                         ai.perceivedLimit = unit.estimatedMax * 0.8;
                         break;
                     case 'cilem': // Pessimist, poor
-                        // Folds early
                         ai.perceivedLimit = unit.estimatedMin * (0.5 + Math.random() * 0.4);
                         break;
                 }
@@ -1265,6 +1399,7 @@
             if (nextMinBid > ai.wealth) {
                 ai.isFolded = true;
                 auc.log.push(`${ai.avatar} ${ai.name} parasızlıktan çekildi.`);
+                showSpeech(ai.id, 'fold');
                 return;
             }
 
@@ -1275,25 +1410,20 @@
                      // Troll bid
                 } else {
                     ai.isFolded = true;
-                    // auc.log.push(`${ai.avatar} ${ai.name} çekildi.`); // Don't spam log with silent folds? Or show it?
-                    // Let's show it in log
                     auc.log.push(`${ai.avatar} ${ai.name} çekildi.`);
+                    showSpeech(ai.id, 'fold');
                     return;
                 }
             }
 
-            // Yilong "Wait" Logic: He might skip bidding even if he can
+            // Yilong "Wait" Logic
             if (ai.id === 'yilong' && Math.random() < 0.3) {
-                // He waits this turn
                 return;
             }
 
             // Place Bid
-            // Decide increment: Small or Large?
             let increment = 50;
             if (ai.aggressive > 0.5 && Math.random() < 0.5) increment = 200;
-
-            // Yilong sometimes does crazy jumps
             if (ai.id === 'yilong' && Math.random() < 0.2) increment = 500;
 
             placeBid(ai.id, auc.currentBid + increment);
@@ -1313,13 +1443,16 @@
                 const ai = auc.participants.find(p => p.id === bidderId);
                 auc.highestBidder = ai;
                 auc.log.push(`${ai.avatar} ${ai.name} ${amount} ₺ teklif verdi!`);
-                ai.lastAction = 'BID';
+
+                showSpeech(ai.id, 'bid');
             }
 
             // Reset Timer
             auc.lastBidTime = Date.now();
             auc.timer = 0;
-            renderAuction();
+
+            // Immediate UI update for responsiveness
+            updateAuctionUI();
         }
 
         function endAuction() {
@@ -1329,29 +1462,20 @@
             if (winner && winner.id === 'player') {
                 // Player Won
                 if (gameState.money >= auc.currentBid) {
-                    // Successful purchase
-                    // We need to trigger the buy logic manually since the old buyUnit function checks price
-                    // We need a modified buy function that accepts the bid price
                     completePlayerPurchase(auc.unit, auc.currentBid);
                 } else {
-                    // Should not happen due to button checks, but just in case
                     alert("Hata: Yetersiz Bakiye!");
                     renderStorageSelection();
                 }
             } else if (winner) {
                 // AI Won
                 alert(`İhaleyi ${winner.name} kazandı! Fiyat: ${auc.currentBid} ₺`);
-
-                // Mark unit as sold
                 auc.unit.soldTo = winner;
                 renderStorageSelection();
             } else {
-                // No one bid? (Rare/Impossible with logic)
                 alert("Kimse teklif vermedi. İhale iptal.");
                 renderStorageSelection();
             }
-
-            // Clear auction state
             gameState.auction = null;
         }
 
