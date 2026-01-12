@@ -437,10 +437,10 @@
             position: relative;
         }
         .opponent-card.active-bidder {
-            border-color: var(--accent-color);
-            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--char-color);
+            background: rgba(255, 255, 255, 0.1);
             transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 25px var(--char-color), inset 0 0 10px var(--char-color);
         }
         .opponent-card.folded {
             opacity: 0.3;
@@ -485,33 +485,49 @@
         /* SPEECH BUBBLES FOR AUCTION */
         .mini-bubble {
             position: absolute;
-            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid var(--accent-color);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--char-color);
             color: #fff;
             padding: 8px 12px;
             border-radius: 12px;
-            border-bottom-left-radius: 0;
             font-size: 0.8rem;
             white-space: nowrap;
             z-index: 100;
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
-            box-shadow: 0 0 15px var(--accent-color);
+            box-shadow: 0 0 15px var(--char-color);
             text-shadow: none;
-            font-weight: normal;
+            font-weight: bold;
         }
 
-        .mini-bubble::after {
+        .bubble-top {
+            bottom: 110%;
+        }
+        .bubble-top::after {
             content: '';
             position: absolute;
-            bottom: -6px;
-            left: 0;
-            border-width: 6px 6px 0;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 8px 0;
             border-style: solid;
-            border-color: rgba(0, 0, 0, 0.9) transparent;
+            border-color: var(--char-color) transparent transparent transparent;
+        }
+
+        .bubble-bottom {
+            top: 110%;
+        }
+        .bubble-bottom::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 8px 8px;
+            border-style: solid;
+            border-color: transparent transparent var(--char-color) transparent;
         }
 
         @keyframes popIn {
@@ -629,10 +645,10 @@
 
         // --- OPPONENTS ---
         const OPPONENTS = [
-            { id: 'yilong', name: 'Yilong Ma', avatar: '🚀', wealth: 999999, aggressive: 0.9, patience: 2, desc: 'Teknoloji Milyarderi' },
-            { id: 'hasan', name: 'Hurdacı Hasan', avatar: '🧢', wealth: 5000, aggressive: 0.3, patience: 5, desc: 'Eski Toprak' },
-            { id: 'daniel', name: 'Jew Daniel', avatar: '💎', wealth: 50000, aggressive: 0.7, patience: 4, desc: 'Kuyumcu' },
-            { id: 'cilem', name: 'Bitmeyen Çilem', avatar: '🚬', wealth: 2000, aggressive: 0.1, patience: 1, desc: 'Şanssız' }
+            { id: 'yilong', name: 'Yilong Ma', avatar: '🚀', wealth: 999999, aggressive: 0.9, patience: 2, desc: 'Teknoloji Milyarderi', color: '#00d2d3' },
+            { id: 'hasan', name: 'Hurdacı Hasan', avatar: '🧢', wealth: 5000, aggressive: 0.3, patience: 5, desc: 'Eski Toprak', color: '#ff9f43' },
+            { id: 'daniel', name: 'Jew Daniel', avatar: '💎', wealth: 50000, aggressive: 0.7, patience: 4, desc: 'Kuyumcu', color: '#feca57' },
+            { id: 'cilem', name: 'Bitmeyen Çilem', avatar: '🚬', wealth: 2000, aggressive: 0.1, patience: 1, desc: 'Şanssız', color: '#ff6b6b' }
         ];
 
         const OPPONENT_LINES = {
@@ -1207,10 +1223,10 @@
             // Participants HTML
             const opponentsHtml = auc.participants.map(p => {
                 return `
-                <div id="opponent-card-${p.id}" class="opponent-card">
+                <div id="opponent-card-${p.id}" class="opponent-card" style="--char-color: ${p.color}">
                     <div class="opponent-avatar">${p.avatar}</div>
                     <div class="opponent-name">${p.name}</div>
-                    <div id="leader-badge-${p.id}" style="font-size:0.7rem; color:var(--success-color); font-weight:bold; display:none;">LİDER</div>
+                    <div id="leader-badge-${p.id}" style="font-size:0.7rem; color:var(--char-color); font-weight:bold; display:none;">LİDER</div>
                 </div>
                 `;
             }).join('');
@@ -1236,7 +1252,7 @@
                         <div class="opponents-grid">
                             ${opponentsHtml}
                             <!-- Player Card -->
-                            <div id="opponent-card-player" class="opponent-card">
+                            <div id="opponent-card-player" class="opponent-card" style="--char-color: #00e676">
                                 <div class="opponent-avatar">👤</div>
                                 <div class="opponent-name">SEN</div>
                                 <div id="leader-badge-player" style="font-size:0.7rem; color:var(--success-color); font-weight:bold; display:none;">LİDER</div>
@@ -1359,8 +1375,14 @@
             const existing = card.querySelector('.mini-bubble');
             if (existing) existing.remove();
 
+            // Determine Position (Zig-Zag)
+            // Yilong (0) -> Top, Hasan (1) -> Bottom, Daniel (2) -> Top, Cilem (3) -> Bottom
+            const opIndex = OPPONENTS.findIndex(o => o.id === id);
+            const isTop = (opIndex === -1) ? true : (opIndex % 2 === 0);
+            const posClass = isTop ? 'bubble-top' : 'bubble-bottom';
+
             const bubble = document.createElement('div');
-            bubble.className = 'mini-bubble';
+            bubble.className = `mini-bubble ${posClass}`;
             bubble.innerText = text;
 
             card.appendChild(bubble);
