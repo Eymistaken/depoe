@@ -1,26 +1,41 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DepoE: EO'nun Dükkanı</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f0c29;
-            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            --text-color: #ffffff;
-            --accent-color: #ffd700; /* Gold */
-            --danger-color: #ff4b4b;
-            --success-color: #00e676;
-            --eo-color: #d500f9;
-            --black-market-color: #9d00ff;
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --bg-color: #0a0a0a;
+            --bg-gradient: linear-gradient(160deg, #0a0a0a 0%, #1a120b 40%, #0d0d0d 100%);
+            --text-color: #f0ece4;
+            --text-muted: rgba(240, 236, 228, 0.5);
+            --accent-color: #e8a924;
+            --danger-color: #d44030;
+            --success-color: #4ec9a0;
+            --eo-color: #b85c38;
+            --black-market-color: #8b0000;
+            --glass-bg: rgba(232, 169, 36, 0.04);
+            --glass-border: rgba(232, 169, 36, 0.12);
+            --surface: rgba(20, 16, 12, 0.8);
+            --shadow: 0 4px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(232, 169, 36, 0.05);
+            --font-heading: 'Cinzel Decorative', serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-body);
             background: var(--bg-gradient);
             background-attachment: fixed;
             background-size: cover;
@@ -31,96 +46,188 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Geometric background pattern overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 60px,
+                    rgba(232, 169, 36, 0.015) 60px,
+                    rgba(232, 169, 36, 0.015) 61px),
+                repeating-linear-gradient(-45deg,
+                    transparent,
+                    transparent 60px,
+                    rgba(232, 169, 36, 0.015) 60px,
+                    rgba(232, 169, 36, 0.015) 61px);
+            pointer-events: none;
+            z-index: 0;
+            animation: bgShift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgShift {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
         }
 
         /* UTILS - GLASSMORPHISM */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid var(--glass-border);
+            border-radius: 12px;
             box-shadow: var(--shadow);
         }
 
-        .hidden { display: none !important; }
+        .hidden {
+            display: none !important;
+        }
 
         .btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--glass-border);
+            background: rgba(232, 169, 36, 0.08);
+            border: 0.5px solid var(--glass-border);
             color: var(--text-color);
             padding: 12px 24px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: var(--font-body);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin: 5px;
-            border-radius: 12px;
+            border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
         }
+
         .btn:hover {
             background: var(--accent-color);
-            color: #000;
+            color: #0a0a0a;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 6px 24px rgba(232, 169, 36, 0.35);
         }
+
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(232, 169, 36, 0.2);
+        }
+
         .btn-danger:hover {
-             background: var(--danger-color);
-             box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4);
+            background: var(--danger-color);
+            color: var(--text-color);
+            box-shadow: 0 6px 24px rgba(212, 64, 48, 0.4);
         }
+
         .btn-purple:hover {
             background: var(--eo-color);
-            color: white;
-            box-shadow: 0 5px 15px rgba(213, 0, 249, 0.4);
+            color: var(--text-color);
+            box-shadow: 0 6px 24px rgba(184, 92, 56, 0.4);
         }
 
         .btn:disabled {
-            border-color: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.3);
+            border-color: rgba(232, 169, 36, 0.05);
+            color: rgba(240, 236, 228, 0.2);
             cursor: not-allowed;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.3);
             transform: none;
             box-shadow: none;
         }
 
         /* HEADER */
         header {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(15px);
-            padding: 15px 30px;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(24px);
+            padding: 16px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--glass-border);
             z-index: 100;
+            position: relative;
+            animation: warmGlow 4s ease-in-out infinite;
         }
+
+        @keyframes warmGlow {
+
+            0%,
+            100% {
+                border-bottom-color: rgba(232, 169, 36, 0.12);
+            }
+
+            50% {
+                border-bottom-color: rgba(232, 169, 36, 0.25);
+            }
+        }
+
         .stats {
             display: flex;
             gap: 25px;
         }
+
         .stat-box {
             text-align: right;
         }
+
         .stat-label {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.75rem;
-            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            font-weight: 500;
         }
-        .money { color: var(--success-color); font-weight: bold; }
+
+        .money {
+            color: var(--success-color);
+            font-weight: 700;
+        }
 
         .logo {
+            font-family: var(--font-heading);
             font-weight: 900;
-            font-size: 1.8rem;
-            background: linear-gradient(to right, #ffd700, #ff8c00);
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #e8a924, #b85c38, #e8a924);
+            background-size: 200% auto;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            letter-spacing: 3px;
+            animation: logoShimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes logoShimmer {
+
+            0%,
+            100% {
+                background-position: 0% center;
+            }
+
+            50% {
+                background-position: 200% center;
+            }
         }
 
         /* MAIN CONTENT AREA */
@@ -130,7 +237,27 @@
             overflow-y: auto;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Changed from center to allow scrolling if needed */
+            align-items: flex-start;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Custom scrollbar */
+        main::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        main::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        main::-webkit-scrollbar-thumb {
+            background: rgba(232, 169, 36, 0.2);
+            border-radius: 3px;
+        }
+
+        main::-webkit-scrollbar-thumb:hover {
+            background: rgba(232, 169, 36, 0.4);
         }
 
         /* SCREENS */
@@ -138,24 +265,45 @@
             width: 100%;
             max-width: 900px;
             text-align: center;
-            animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            animation: screenReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1);
             padding: 30px;
             margin-top: 20px;
+        }
+
+        .screen h2 {
+            font-family: var(--font-heading);
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .screen h3 {
+            font-family: var(--font-heading);
+            font-weight: 700;
         }
 
         /* Glass Panel Container for Screens */
         .screen-glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid var(--glass-border);
+            border-radius: 16px;
             box-shadow: var(--shadow);
             padding: 40px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); scale: 0.95; }
-            to { opacity: 1; transform: translateY(0); scale: 1; }
+        @keyframes screenReveal {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+                filter: blur(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
         }
 
         /* STORAGE SELECTION */
@@ -165,11 +313,12 @@
             gap: 25px;
             margin-top: 30px;
         }
+
         .storage-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            padding: 20px;
-            border-radius: 16px;
+            background: var(--surface);
+            border: 0.5px solid var(--glass-border);
+            padding: 22px;
+            border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             display: flex;
@@ -178,85 +327,240 @@
             min-height: 200px;
             position: relative;
             overflow: hidden;
+            animation: cardStagger 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
+
+        .storage-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .storage-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .storage-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .storage-card:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .storage-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        @keyframes cardStagger {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .storage-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .storage-card:hover::before {
+            opacity: 1;
+        }
+
         .storage-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--accent-color);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(-8px);
+            background: rgba(232, 169, 36, 0.06);
+            border-color: rgba(232, 169, 36, 0.3);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 169, 36, 0.08);
         }
-        .storage-card h3 { margin-top: 0; color: var(--accent-color); }
+
+        .storage-card h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+            font-family: var(--font-heading);
+            font-size: 1rem;
+        }
 
         .storage-card.black-market {
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(10, 0, 0, 0.9);
             backdrop-filter: blur(20px);
-            border-color: #ff0000;
+            border-color: #8b0000;
             color: #e0e0e0;
             font-weight: 800;
-            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
-            animation: pulse-red 2s infinite;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.4);
+            animation: cardStagger 0.5s cubic-bezier(0.22, 1, 0.36, 1) both, pulse-red 2.5s ease-in-out infinite;
         }
-        .storage-card.black-market h3 { color: #ff0000; }
-        .storage-card.black-market p { font-weight: 800; }
+
+        .storage-card.black-market h3 {
+            color: #c62828;
+        }
+
+        .storage-card.black-market p {
+            font-weight: 800;
+        }
 
         .storage-card.black-market .unit-price {
-            color: #ff0000 !important;
-            text-shadow: 0 0 15px rgba(255, 0, 0, 0.8) !important;
+            color: #c62828 !important;
+            text-shadow: 0 0 12px rgba(198, 40, 40, 0.6) !important;
         }
 
         @keyframes pulse-red {
-            0% { box-shadow: 0 0 20px #8b0000; }
-            50% { box-shadow: 0 0 35px #ff0000; }
-            100% { box-shadow: 0 0 20px #8b0000; }
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(139, 0, 0, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 30px rgba(139, 0, 0, 0.05);
+            }
         }
 
         .risk-badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
             margin-top: 10px;
+            letter-spacing: 0.5px;
         }
-        .risk-low { background: rgba(0, 230, 118, 0.2); color: #00e676; }
-        .risk-med { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
-        .risk-high { background: rgba(255, 75, 75, 0.2); color: #ff4b4b; }
-        .risk-black { background: rgba(0, 0, 0, 0.9); color: #ff0000; }
+
+        .risk-low {
+            background: rgba(78, 201, 160, 0.15);
+            color: var(--success-color);
+        }
+
+        .risk-med {
+            background: rgba(232, 169, 36, 0.15);
+            color: var(--accent-color);
+        }
+
+        .risk-high {
+            background: rgba(212, 64, 48, 0.15);
+            color: var(--danger-color);
+        }
+
+        .risk-black {
+            background: rgba(139, 0, 0, 0.3);
+            color: #c62828;
+            border: 0.5px solid rgba(139, 0, 0, 0.5);
+        }
 
         /* ITEM REVEAL & LISTS */
         .item-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             margin: 30px 0;
             text-align: left;
         }
+
         .item-row {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px 20px;
-            border-radius: 12px;
+            background: var(--surface);
+            padding: 14px 20px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 5px solid transparent;
-            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        .item-row:hover { background: rgba(255,255,255,0.05); }
 
-        .rarity-junk { border-color: #9e9e9e; }
-        .rarity-common { border-color: var(--success-color); }
-        .rarity-rare { border-color: var(--accent-color); }
-        .rarity-legendary { border-color: #ffeb3b; background: linear-gradient(90deg, rgba(255, 235, 59, 0.1), transparent); }
+        .item-row:nth-child(1) {
+            animation-delay: 0.03s;
+        }
+
+        .item-row:nth-child(2) {
+            animation-delay: 0.06s;
+        }
+
+        .item-row:nth-child(3) {
+            animation-delay: 0.09s;
+        }
+
+        .item-row:nth-child(4) {
+            animation-delay: 0.12s;
+        }
+
+        .item-row:nth-child(5) {
+            animation-delay: 0.15s;
+        }
+
+        .item-row:nth-child(6) {
+            animation-delay: 0.18s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item-row:hover {
+            background: rgba(232, 169, 36, 0.05);
+            transform: translateX(4px);
+        }
+
+        .rarity-junk {
+            border-color: #6b6b6b;
+        }
+
+        .rarity-common {
+            border-color: var(--success-color);
+        }
+
+        .rarity-rare {
+            border-color: var(--accent-color);
+        }
+
+        .rarity-legendary {
+            border-color: #e8a924;
+            background: linear-gradient(90deg, rgba(232, 169, 36, 0.08), transparent);
+            animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both, shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                border-color: #e8a924;
+            }
+
+            50% {
+                border-color: #f5d070;
+                box-shadow: 0 0 12px rgba(232, 169, 36, 0.15);
+            }
+        }
 
         .certified-badge {
             background: var(--accent-color);
-            color: #000;
-            padding: 2px 6px;
+            color: #0a0a0a;
+            padding: 2px 8px;
             border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
+            font-size: 0.65rem;
+            font-weight: 700;
             margin-left: 8px;
             vertical-align: middle;
+            letter-spacing: 0.5px;
         }
 
         /* NEGOTIATION SCENE */
@@ -264,19 +568,24 @@
             display: flex;
             flex-direction: column;
             height: 500px;
-            border-radius: 20px;
+            border-radius: 14px;
             overflow: hidden;
             position: relative;
-            background: url('https://images.unsplash.com/photo-1550523092-234293e50669?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
-            border: 1px solid var(--glass-border);
+            background:
+                radial-gradient(ellipse at 50% 20%, rgba(184, 92, 56, 0.15) 0%, transparent 60%),
+                linear-gradient(180deg, #0d0907 0%, #1a120b 50%, #0a0a0a 100%);
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.6);
+            border: 0.5px solid var(--glass-border);
         }
 
-        /* Dark overlay for the background image */
+        /* Dark overlay */
         .scene-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 12, 41, 0.7);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 10, 0.4);
             z-index: 1;
         }
 
@@ -292,34 +601,45 @@
 
         .eo-avatar {
             font-size: 80px;
-            background: radial-gradient(circle, rgba(156, 39, 176, 0.5) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(184, 92, 56, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
             padding: 20px;
             border-radius: 50%;
-            animation: float 3s ease-in-out infinite;
-            text-shadow: 0 0 30px var(--eo-color);
+            animation: breathe 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(184, 92, 56, 0.3));
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.85;
+            }
         }
 
         .speech-bubble {
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            padding: 15px 25px;
-            border-radius: 20px;
-            border-bottom-left-radius: 0;
+            background: rgba(20, 16, 12, 0.92);
+            color: var(--text-color);
+            padding: 16px 24px;
+            border-radius: 14px;
+            border-bottom-left-radius: 2px;
             max-width: 60%;
             margin-top: 10px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            font-weight: 500;
+            font-size: 1.05rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 3;
             text-align: left;
+            border: 0.5px solid var(--glass-border);
+            line-height: 1.5;
         }
+
         .speech-bubble::after {
             content: '';
             position: absolute;
@@ -327,15 +647,15 @@
             left: 0;
             border-width: 10px 10px 0;
             border-style: solid;
-            border-color: rgba(255, 255, 255, 0.95) transparent;
+            border-color: rgba(20, 16, 12, 0.92) transparent;
         }
 
         .negotiation-desk {
             z-index: 2;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(24px);
             padding: 20px;
-            border-top: 1px solid var(--glass-border);
+            border-top: 0.5px solid var(--glass-border);
             display: flex;
             gap: 20px;
             align-items: center;
@@ -351,36 +671,94 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 8px;
         }
 
         /* HUB MENU */
         .hub-menu {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
+            gap: 24px;
             margin-top: 40px;
         }
 
         .hub-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 30px;
-            border-radius: 20px;
+            background: var(--surface);
+            border: 0.5px solid var(--glass-border);
+            padding: 28px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            animation: cardStagger 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+            position: relative;
+            overflow: hidden;
         }
+
+        .hub-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .hub-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .hub-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .hub-card:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .hub-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .hub-card:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .hub-card:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .hub-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .hub-card:hover::before {
+            opacity: 1;
+        }
+
         .hub-card:hover {
-            background: rgba(255,255,255,0.15);
-            transform: translateY(-5px);
-            border-color: var(--accent-color);
+            background: rgba(232, 169, 36, 0.06);
+            transform: translateY(-6px);
+            border-color: rgba(232, 169, 36, 0.3);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
         }
-        .hub-icon { font-size: 3rem; }
-        .hub-title { font-size: 1.2rem; font-weight: bold; }
+
+        .hub-icon {
+            font-size: 2.8rem;
+        }
+
+        .hub-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            letter-spacing: 1px;
+        }
 
         /* AUCTION SCREEN */
         .auction-header {
@@ -389,14 +767,16 @@
             align-items: center;
             margin-bottom: 20px;
         }
+
         .auction-main {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
+
         .auction-visual {
-            background: rgba(0,0,0,0.3);
-            border-radius: 20px;
+            background: rgba(10, 10, 10, 0.6);
+            border-radius: 14px;
             padding: 30px;
             position: relative;
             min-height: 200px;
@@ -404,76 +784,123 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border: 2px solid var(--glass-border);
+            border: 0.5px solid var(--glass-border);
         }
+
         .current-bid-display {
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: 900;
+            font-family: var(--font-heading);
             color: var(--success-color);
-            text-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
+            text-shadow: 0 0 30px rgba(78, 201, 160, 0.3);
         }
+
         .timer-display {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--danger-color);
-            font-weight: bold;
+            font-weight: 700;
             margin-top: 10px;
             height: 30px;
+            font-family: var(--font-mono);
         }
 
         .opponents-grid {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 14px;
             margin: 20px 0;
         }
+
         .opponent-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
+            background: var(--surface);
+            border: 0.5px solid var(--glass-border);
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 10px;
             width: 80px;
             text-align: center;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
+
         .opponent-card.active-bidder {
             border-color: var(--char-color);
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(232, 169, 36, 0.06);
             transform: scale(1.1);
-            box-shadow: 0 0 25px var(--char-color), inset 0 0 10px var(--char-color);
+            box-shadow: 0 0 20px var(--char-color), inset 0 0 8px var(--char-color);
         }
+
         .opponent-card.folded {
-            opacity: 0.3;
+            opacity: 0.25;
             filter: grayscale(1);
         }
-        .opponent-avatar { font-size: 2.5rem; }
-        .opponent-name { font-size: 0.7rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .opponent-avatar {
+            font-size: 2.5rem;
+        }
+
+        .opponent-name {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+        }
+
         .last-action {
             position: absolute;
-            top: -10px; right: -10px;
+            top: -10px;
+            right: -10px;
             background: var(--accent-color);
-            color: #000;
-            font-size: 0.7rem;
-            padding: 2px 5px;
-            border-radius: 5px;
-            font-weight: bold;
+            color: #0a0a0a;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
             display: none;
         }
 
         .bid-log {
-            background: rgba(0,0,0,0.5);
+            background: rgba(10, 10, 10, 0.7);
             height: 150px;
             overflow-y: auto;
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 12px;
             text-align: left;
-            font-family: monospace;
-            font-size: 0.9rem;
-            border: 1px solid var(--glass-border);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            border: 0.5px solid var(--glass-border);
+            color: var(--text-muted);
         }
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
-        .log-entry.high-bid { color: var(--success-color); font-weight: bold; }
-        .log-entry.fold { color: var(--danger-color); font-style: italic; }
+
+        .bid-log::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .bid-log::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .bid-log::-webkit-scrollbar-thumb {
+            background: rgba(232, 169, 36, 0.15);
+            border-radius: 2px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(232, 169, 36, 0.05);
+            padding-bottom: 3px;
+        }
+
+        .log-entry.high-bid {
+            color: var(--success-color);
+            font-weight: 700;
+        }
+
+        .log-entry.fold {
+            color: var(--danger-color);
+            font-style: italic;
+        }
 
         .player-controls {
             display: grid;
@@ -487,24 +914,26 @@
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid var(--char-color);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 12px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1.5px solid var(--char-color);
+            color: var(--text-color);
+            padding: 8px 14px;
+            border-radius: 8px;
             font-size: 0.8rem;
+            font-family: var(--font-body);
             white-space: nowrap;
             z-index: 100;
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
-            box-shadow: 0 0 15px var(--char-color);
+            box-shadow: 0 0 12px var(--char-color);
             text-shadow: none;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .bubble-top {
             bottom: 110%;
         }
+
         .bubble-top::after {
             content: '';
             position: absolute;
@@ -519,6 +948,7 @@
         .bubble-bottom {
             top: 110%;
         }
+
         .bubble-bottom::after {
             content: '';
             position: absolute;
@@ -531,12 +961,19 @@
         }
 
         @keyframes popIn {
-            from { opacity: 0; transform: translateX(-50%) scale(0.5); }
-            to { opacity: 1; transform: translateX(-50%) scale(1); }
-        }
+            from {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.5);
+            }
 
+            to {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+        }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -1496,7 +1933,7 @@
                 }
             },
 
-            getLine: function(category, reputation) {
+            getLine: function (category, reputation) {
                 // If the category is threatResponse (array), return directly
                 if (Array.isArray(this.dialogue[category])) {
                     const lines = this.dialogue[category];
@@ -1512,7 +1949,7 @@
             },
 
             // Logic to determine initial offer (always lowball)
-            calculateOffer: function(itemRealValue, reputation) {
+            calculateOffer: function (itemRealValue, reputation) {
                 // Base offer is 40-60% of real value
                 let percent = 0.4 + (Math.random() * 0.2);
 
@@ -1605,7 +2042,7 @@
             const questCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
             const categories = ["Elektronik", "Antika", "Giyim", "Mobilya", "Spor"];
 
-            for(let i=0; i<questCount; i++) {
+            for (let i = 0; i < questCount; i++) {
                 const isSellQuest = Math.random() > 0.5;
                 if (isSellQuest) {
                     const type = Math.random() > 0.7 ? 'rare' : 'common';
@@ -1658,7 +2095,7 @@
                     }
                 }
             });
-            if(completedAny) updateHeader();
+            if (completedAny) updateHeader();
         }
 
         function startRound() {
@@ -1700,7 +2137,7 @@
             const units = [];
             const risks = ['Düşük', 'Orta', 'Yüksek'];
 
-            for(let i=0; i<5; i++) {
+            for (let i = 0; i < 5; i++) {
                 // Black Market Chance (3%)
                 let isBlackMarket = Math.random() < 0.03;
 
@@ -1727,8 +2164,8 @@
                     desc = generateUnitDescription(riskLevel);
 
                     let baseVal = 500 + (gameState.round * 50);
-                    if(riskLevel === 1) baseVal *= 1.5;
-                    if(riskLevel === 2) baseVal *= 2.5;
+                    if (riskLevel === 1) baseVal *= 1.5;
+                    if (riskLevel === 2) baseVal *= 2.5;
 
                     // Accuracy Logic
                     if (riskLevel === 0) { // Low Risk: Accurate
@@ -1769,7 +2206,7 @@
 
         // --- AUCTION SYSTEM ---
 
-        window.startAuction = function(unitId) {
+        window.startAuction = function (unitId) {
             const unit = gameState.availableUnits.find(u => u.id === unitId);
             if (!unit) return;
 
@@ -1820,14 +2257,14 @@
                     <div class="auction-header">
                         <div>
                             <h2 style="margin:0">${unit.name}</h2>
-                            <div style="font-size:0.9rem; opacity:0.7">Tahmini: ${unit.estimatedMin} - ${unit.estimatedMax} ₺</div>
+                            <div style="font-size:0.9rem; color:var(--text-muted)">Tahmini: ${unit.estimatedMin} - ${unit.estimatedMax} ₺</div>
                         </div>
                         <div class="money">${gameState.money} ₺</div>
                     </div>
 
                     <div class="auction-main">
                         <div class="auction-visual">
-                            <div style="font-size:1.2rem; color:#aaa; margin-bottom:10px;">GÜNCEL TEKLİF</div>
+                            <div style="font-size:1.2rem; color:var(--text-muted); margin-bottom:10px;">GÜNCEL TEKLİF</div>
                             <div id="auction-current-bid" class="current-bid-display">${auc.currentBid} ₺</div>
                             <div id="auction-timer-text" class="timer-display">Teklif Bekleniyor...</div>
                             <div id="player-win-msg" style="color:var(--success-color); font-weight:bold; margin-top:10px; display:none;">🏆 ŞU AN KAZANIYORSUN!</div>
@@ -1862,7 +2299,7 @@
 
         function updateAuctionUI() {
             const auc = gameState.auction;
-            if(!auc) return;
+            if (!auc) return;
 
             // Update Bid Text
             document.getElementById('auction-current-bid').innerText = auc.currentBid + ' ₺';
@@ -1977,12 +2414,12 @@
             }, 3000);
         }
 
-        window.placePlayerBid = function(amount) {
+        window.placePlayerBid = function (amount) {
             const auc = gameState.auction;
-            if(!auc || auc.playerFolded) return;
+            if (!auc || auc.playerFolded) return;
 
             const nextBid = auc.currentBid + amount;
-            if(gameState.money < nextBid) {
+            if (gameState.money < nextBid) {
                 alert("Yetersiz bakiye!");
                 return;
             }
@@ -1990,9 +2427,9 @@
             placeBid('player', nextBid);
         };
 
-        window.playerFold = function() {
+        window.playerFold = function () {
             const auc = gameState.auction;
-            if(!auc) return;
+            if (!auc) return;
 
             // Stop timer
             if (auc.timerInterval) clearInterval(auc.timerInterval);
@@ -2011,7 +2448,7 @@
 
         function updateAuctionLoop() {
             const auc = gameState.auction;
-            if(!auc) return;
+            if (!auc) return;
 
             // Timer Logic
             const now = Date.now();
@@ -2041,7 +2478,7 @@
 
             // Process AI (if not sold)
             if (auc.timer < 3) {
-                 processAIBidding();
+                processAIBidding();
             }
 
             updateAuctionUI();
@@ -2069,7 +2506,7 @@
                 if (unit.risk === 2) riskFactor = 1.5;
                 if (unit.risk === 3) riskFactor = 2.0; // Black market
 
-                switch(ai.id) {
+                switch (ai.id) {
                     case 'yilong': // Crazy, rich, troll
                         ai.perceivedLimit = unit.estimatedMax * (1 + Math.random() * 2);
                         break;
@@ -2100,7 +2537,7 @@
             if (nextMinBid > ai.perceivedLimit) {
                 // Yilong might troll and go over limit sometimes (10%)
                 if (ai.id === 'yilong' && Math.random() < 0.1) {
-                     // Troll bid
+                    // Troll bid
                 } else {
                     ai.isFolded = true;
                     auc.log.push(`${ai.avatar} ${ai.name} çekildi.`);
@@ -2124,7 +2561,7 @@
 
         function placeBid(bidderId, amount) {
             const auc = gameState.auction;
-            if(auc.timer >= 3) return; // Closed
+            if (auc.timer >= 3) return; // Closed
 
             // Update State
             auc.currentBid = amount;
@@ -2193,7 +2630,7 @@
         function renderStorageSelection() {
             const containerHtml = gameState.availableUnits.map(unit => {
                 let riskClass;
-                if(unit.risk === 3) riskClass = 'risk-black';
+                if (unit.risk === 3) riskClass = 'risk-black';
                 else riskClass = unit.risk === 0 ? 'risk-low' : (unit.risk === 1 ? 'risk-med' : 'risk-high');
 
                 const isSold = unit.soldTo !== null;
@@ -2205,7 +2642,7 @@
                     <h3>${unit.name}</h3>
                     <p>${unit.description}</p>
                     <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
-                    <div class="unit-price" style="margin-top:auto; font-size:1.1rem; color:#ccc;">
+                    <div class="unit-price" style="margin-top:auto; font-size:1.1rem; color:var(--text-muted);">
                         Tahmini: <span style="color:var(--accent-color); font-weight:bold;">${unit.estimatedMin} - ${unit.estimatedMax} ₺</span>
                     </div>
                 `;
@@ -2214,7 +2651,7 @@
                 let cardStyle = "";
 
                 if (isSold) {
-                    cardContent += `<div style="margin-top:10px; color:var(--danger-color); font-weight:bold; border:2px solid var(--danger-color); padding:5px; border-radius:5px; transform:rotate(-5deg);">SATILDI: ${unit.soldTo.name}</div>`;
+                    cardContent += `<div style="margin-top:10px; color:var(--danger-color); font-weight:700; border:1px solid var(--danger-color); padding:6px 10px; border-radius:6px; transform:rotate(-3deg); font-size:0.85rem; letter-spacing:1px;">SATILDI: ${unit.soldTo.name}</div>`;
                     cardStyle = "opacity:0.6; filter:grayscale(0.8); cursor:default;";
                 } else {
                     if (canAfford) {
@@ -2234,7 +2671,7 @@
             ui.app.innerHTML = `
                 <div class="screen">
                     <h2 style="font-size:2rem; margin-bottom:10px">📢 GÜNÜN İHALESİ</h2>
-                    <p style="color:#aaa">Mevcut Bakiye: <span class="money">${gameState.money} ₺</span></p>
+                    <p style="color:var(--text-muted)">Mevcut Bakiye: <span class="money">${gameState.money} ₺</span></p>
                     <div class="storage-grid">
                         ${containerHtml}
                     </div>
@@ -2245,12 +2682,12 @@
 
         // --- EXPERT PHASE ---
 
-        window.startExpertPhase = function() {
+        window.startExpertPhase = function () {
             renderExpert();
         };
 
         function renderExpert() {
-             const listHtml = gameState.inventory.map(item => {
+            const listHtml = gameState.inventory.map(item => {
                 let rarityInfo = Object.values(RARITY).find(r => r.id === item.type);
                 const fee = Math.max(50, Math.floor(item.realValue * 0.05));
                 const canAfford = gameState.money >= fee;
@@ -2259,13 +2696,13 @@
                 <div class="item-row rarity-${item.type}">
                     <div>
                         <strong>${item.name}</strong> ${item.certified ? '✅' : ''}<br>
-                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${item.certified
-                            ? `<span style="color:var(--success-color); font-weight:bold;">DEĞER: ${item.realValue} ₺</span>`
-                            : `<button class="btn" style="font-size:0.8rem" onclick="certifyItem(${item.id}, ${fee})" ${!canAfford ? 'disabled' : ''}>ONAYLAT (-${fee}₺)</button>`
-                        }
+                        ? `<span style="color:var(--success-color); font-weight:bold;">DEĞER: ${item.realValue} ₺</span>`
+                        : `<button class="btn" style="font-size:0.8rem" onclick="certifyItem(${item.id}, ${fee})" ${!canAfford ? 'disabled' : ''}>ONAYLAT (-${fee}₺)</button>`
+                    }
                     </div>
                 </div>
                 `;
@@ -2284,7 +2721,7 @@
             `;
         }
 
-        window.certifyItem = function(id, fee) {
+        window.certifyItem = function (id, fee) {
             if (gameState.money < fee) return;
 
             const item = gameState.inventory.find(i => i.id === id);
@@ -2309,7 +2746,7 @@
         let negotiationState = null;
         let selectedForBulk = new Set();
 
-        window.startShopPhase = function() {
+        window.startShopPhase = function () {
             selectedForBulk.clear();
             renderShop();
         };
@@ -2320,14 +2757,14 @@
             renderShop(); // Re-render to update buttons state if needed
         }
 
-        window.sellBulk = function() {
+        window.sellBulk = function () {
             if (selectedForBulk.size === 0) return;
 
             let totalValue = 0;
             const itemsToSell = [];
 
             gameState.inventory.forEach(item => {
-                if(selectedForBulk.has(item.id)) {
+                if (selectedForBulk.has(item.id)) {
                     // Bulk price is 60% of base estimate (approx realValue * 0.6)
                     totalValue += Math.floor(item.realValue * 0.6);
                     itemsToSell.push(item.id);
@@ -2371,7 +2808,7 @@
                         <input type="checkbox" onchange="toggleBulkSelection(${item.id})" ${isSelected ? 'checked' : ''}>
                         <div>
                             <strong>${item.name}</strong> ${item.certified ? '<span class="certified-badge">ONAYLI</span>' : ''}<br>
-                            <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                            <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span>
                         </div>
                     </div>
                     <button class="btn" style="font-size:0.8rem" onclick="initNegotiation(${item.id})">SAT 💰</button>
@@ -2398,7 +2835,7 @@
             `;
         }
 
-        window.initNegotiation = function(itemId) {
+        window.initNegotiation = function (itemId) {
             const item = gameState.inventory.find(i => i.id === itemId);
 
             // Check Memory and handle "Return with Certificate" logic
@@ -2407,9 +2844,9 @@
             // Special case: Player certified the item AFTER a failed negotiation
             // Logic: Memory exists, was NOT certified in memory, but IS certified now
             if (mem && !mem.wasCertified && item.certified) {
-                 // Reset memory for this item effectively to allow re-pricing
-                 delete gameState.negotiationMemory[itemId];
-                 mem = null;
+                // Reset memory for this item effectively to allow re-pricing
+                delete gameState.negotiationMemory[itemId];
+                mem = null;
             }
 
             if (mem) {
@@ -2449,10 +2886,10 @@
                     if (Math.random() < suspicionChance) {
                         // SUSPICIOUS: Lowball hard
                         initialOffer = Math.floor(initialOffer * 0.3);
-                        if(repTier === 'friendly') {
+                        if (repTier === 'friendly') {
                             startDialogue = "Dostum bu çok değerli görünüyor ama sahteleri çok. Bir belgen var mı?";
                         } else if (repTier === 'suspicious') {
-                             startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
+                            startDialogue = "Bunu çaldın mı? Belgesiz hiçbir şey almam, ya da hurda parasına alırım.";
                         } else {
                             startDialogue = "Bu ne? Sahte gibi duruyor. Kanıtın var mı? Yoksa sana ancak çöp parası veririm.";
                         }
@@ -2461,40 +2898,40 @@
                         // Slightly reduce offer compared to certified but much better than lowball
                         initialOffer = Math.floor(item.realValue * (0.6 + Math.random() * 0.2));
 
-                        if(repTier === 'friendly') {
+                        if (repTier === 'friendly') {
                             startDialogue = "Güzel parça! Senden geldiği için orijinalliğine güveniyorum.";
                         } else {
                             startDialogue = "Riskli bir parça ama sana güveneceğim. Fiyatım bu.";
                         }
                     }
                 } else if (item.certified) {
-                     initialOffer = Math.floor(initialOffer * 1.5); // Better offer
+                    initialOffer = Math.floor(initialOffer * 1.5); // Better offer
 
-                     // Check if this is a "Return with Certificate" moment
-                     // We know it is because we cleared 'mem' above if it was a return.
-                     // But we want specific dialogue if it's a return.
-                     // A simple heuristic: If the offer is much higher than what it would be uncertified.
-                     // Better: Just check if we had memory before we cleared it? No, too late.
-                     // Let's rely on standard certified lines, OR add a flag.
+                    // Check if this is a "Return with Certificate" moment
+                    // We know it is because we cleared 'mem' above if it was a return.
+                    // But we want specific dialogue if it's a return.
+                    // A simple heuristic: If the offer is much higher than what it would be uncertified.
+                    // Better: Just check if we had memory before we cleared it? No, too late.
+                    // Let's rely on standard certified lines, OR add a flag.
 
-                     if (gameState.negotiationMemory[itemId] === undefined) {
-                         // It could be a fresh item OR a cleared memory item.
-                         // We can't easily distinguish without more state.
-                         // But we can say "Belgeletmişsin" generally if it is certified.
+                    if (gameState.negotiationMemory[itemId] === undefined) {
+                        // It could be a fresh item OR a cleared memory item.
+                        // We can't easily distinguish without more state.
+                        // But we can say "Belgeletmişsin" generally if it is certified.
 
-                         if(repTier === 'friendly') {
-                             startDialogue = "Belgeletmişsin! İşte şimdi ciddileşebiliriz dostum.";
-                         } else {
-                             startDialogue = "Belgeletmişsin, şimdi ciddileşebiliriz.";
-                         }
-                     }
+                        if (repTier === 'friendly') {
+                            startDialogue = "Belgeletmişsin! İşte şimdi ciddileşebiliriz dostum.";
+                        } else {
+                            startDialogue = "Belgeletmişsin, şimdi ciddileşebiliriz.";
+                        }
+                    }
                 }
 
                 // If consulting, override dialogue
                 if (isConsulting) {
-                     const lines = EO_AI.dialogue.consulting_start[repTier];
-                     const rawLine = lines[Math.floor(Math.random() * lines.length)];
-                     startDialogue = rawLine.replace("${itemName}", item.name);
+                    const lines = EO_AI.dialogue.consulting_start[repTier];
+                    const rawLine = lines[Math.floor(Math.random() * lines.length)];
+                    startDialogue = rawLine.replace("${itemName}", item.name);
                 }
 
                 negotiationState = {
@@ -2512,15 +2949,15 @@
                 // Handle the timer if consulting
                 if (isConsulting) {
                     setTimeout(() => {
-                         // Check if we are still negotiating the same item
-                         if(negotiationState && negotiationState.item.id === item.id && negotiationState.isConsulting) {
-                             negotiationState.isConsulting = false;
-                             negotiationState.dialogue = EO_AI.getLine('consulting_end', gameState.reputation);
-                             
-                             // Update memory to reflect we returned
-                             saveNegotiationState();
-                             renderNegotiation();
-                         }
+                        // Check if we are still negotiating the same item
+                        if (negotiationState && negotiationState.item.id === item.id && negotiationState.isConsulting) {
+                            negotiationState.isConsulting = false;
+                            negotiationState.dialogue = EO_AI.getLine('consulting_end', gameState.reputation);
+
+                            // Update memory to reflect we returned
+                            saveNegotiationState();
+                            renderNegotiation();
+                        }
                     }, 5000);
                 }
             }
@@ -2549,7 +2986,7 @@
 
             // Patience Visualization
             let patienceHtml = '';
-            for(let i=0; i<4; i++) {
+            for (let i = 0; i < 4; i++) {
                 patienceHtml += (i < gameState.eoPatience) ? '🔴 ' : '⚪ ';
             }
 
@@ -2560,10 +2997,10 @@
                     <div class="scene-container">
                         <div class="scene-overlay"></div>
                         <div class="eo-avatar-container">
-                             ${isConsulting 
-                                ? `<div style="height:120px; display:flex; align-items:center; justify-content:center; color:#ccc; font-style:italic; font-size:1.2rem; text-shadow:0 0 10px rgba(0,0,0,0.8);">(Uzman aranıyor...)</div>` 
-                                : `<div class="eo-avatar">👺</div>`
-                             }
+                             ${isConsulting
+                    ? `<div style="height:120px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-style:italic; font-size:1.2rem; text-shadow:0 0 10px rgba(0,0,0,0.8);">(Uzman aranıyor...)</div>`
+                    : `<div class="eo-avatar">👺</div>`
+                }
                              <div class="speech-bubble">"${state.dialogue}"</div>
                              <div style="margin-top:10px; font-size:1.2rem; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:10px;">
                                 SABIR: ${patienceHtml}
@@ -2573,9 +3010,9 @@
                         <div class="negotiation-desk">
                             <div class="desk-item">
                                 <h3 style="margin:0; color:var(--accent-color)">${item.name}</h3>
-                                <div style="font-size:0.8rem; opacity:0.8">${rarityInfo.label} ${item.certified ? '✅' : ''}</div>
+                                <div style="font-size:0.8rem; color:var(--text-muted)">${rarityInfo.label} ${item.certified ? '✅' : ''}</div>
                                 <div style="margin-top:5px; font-weight:bold; color:var(--success-color)">TEKLİF: ${state.currentOffer} ₺</div>
-                                ${playerKnowsValue ? `<div style="font-size:0.7rem; color:#aaa">Gerçek Değer: ${item.realValue} ₺</div>` : ''}
+                                ${playerKnowsValue ? `<div style="font-size:0.7rem; color:var(--text-muted)">Gerçek Değer: ${item.realValue} ₺</div>` : ''}
                             </div>
 
                             <div class="desk-actions">
@@ -2583,7 +3020,7 @@
                                 <button class="btn" onclick="showCounterInput()" ${patienceLow || isConsulting ? 'disabled' : ''}>💬 PAZARLIK</button>
                                 <button class="btn btn-purple" onclick="actionBluff()" ${patienceLow || isConsulting ? 'disabled' : ''}>🎲 BLÖF</button>
                                 <button class="btn btn-danger" onclick="actionThreaten()" ${patienceLow || isConsulting ? 'disabled' : ''}>🤬 TEHDİT</button>
-                                <button class="btn" style="background:transparent; border:1px solid #555;" onclick="actionCancel()" ${isConsulting ? 'disabled' : ''}>❌ VAZGEÇ</button>
+                                <button class="btn" style="background:transparent; border:0.5px solid var(--glass-border);" onclick="actionCancel()" ${isConsulting ? 'disabled' : ''}>❌ VAZGEÇ</button>
                             </div>
                         </div>
                     </div>
@@ -2591,7 +3028,7 @@
             `;
         }
 
-        window.actionAccept = function() {
+        window.actionAccept = function () {
             // Sell item
             gameState.money += negotiationState.currentOffer;
 
@@ -2610,13 +3047,13 @@
             renderShop();
         };
 
-        window.actionCancel = function() {
+        window.actionCancel = function () {
             saveNegotiationState();
             negotiationState = null;
             renderShop();
         };
 
-        window.showCounterInput = function() {
+        window.showCounterInput = function () {
             const currentOffer = negotiationState.currentOffer;
             const promptAmount = prompt("Karşı teklifin nedir? (Sadece sayı)", currentOffer);
             if (promptAmount) {
@@ -2672,9 +3109,9 @@
                     state.currentOffer = playerOffer;
 
                     if (item.eoInterest === 2) {
-                         state.dialogue = "Tamam tamam, alıyorum. Sakın kimseye bu fiyattan bahsetme.";
+                        state.dialogue = "Tamam tamam, alıyorum. Sakın kimseye bu fiyattan bahsetme.";
                     } else {
-                         state.dialogue = EO_AI.getLine('accept', gameState.reputation);
+                        state.dialogue = EO_AI.getLine('accept', gameState.reputation);
                     }
                 } else {
                     // Counter-counter
@@ -2694,7 +3131,7 @@
             renderNegotiation();
         }
 
-        window.actionBluff = function() {
+        window.actionBluff = function () {
             const state = negotiationState;
             // Bluff mechanics: Try to increase perceived value
             const roll = Math.random();
@@ -2715,7 +3152,7 @@
             renderNegotiation();
         };
 
-        window.actionThreaten = function() {
+        window.actionThreaten = function () {
             const state = negotiationState;
             // High risk
             const roll = Math.random();
@@ -2769,9 +3206,9 @@
             updateHeader();
         }
 
-        window.buyUnit = function(id) {
+        window.buyUnit = function (id) {
             const unit = gameState.availableUnits.find(u => u.id === id);
-            if(gameState.money < unit.price) return;
+            if (gameState.money < unit.price) return;
 
             gameState.money -= unit.price;
             gameState.currentUnit = unit;
@@ -2788,7 +3225,7 @@
             const itemCount = 3 + Math.floor(Math.random() * 3); // 3-5 items
             const items = [];
 
-            for(let i=0; i<itemCount; i++) {
+            for (let i = 0; i < itemCount; i++) {
                 // Determine rarity based on risk
                 let roll = Math.random();
                 let chosenType = 'junk';
@@ -2838,10 +3275,10 @@
                 <div class="item-row rarity-${item.type}">
                     <div>
                         <strong>${item.name}</strong><br>
-                        <span style="color:${rarityInfo.color}; font-size:0.8rem">${rarityInfo.label}</span>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span>
                     </div>
                     <div style="display:flex; align-items:center;">
-                        <span style="color:#888; font-size:0.9rem">Tahmini: ???</span>
+                        <span style="color:var(--text-muted); font-size:0.9rem">Tahmini: ???</span>
                     </div>
                 </div>
                 `;
@@ -2859,7 +3296,7 @@
         }
 
         // --- WORKSHOP SYSTEM ---
-        window.startWorkshopPhase = function() {
+        window.startWorkshopPhase = function () {
             renderWorkshop();
         };
 
@@ -2876,7 +3313,7 @@
                 <div class="item-row rarity-junk">
                     <div>
                         <strong>${item.name}</strong><br>
-                        <span style="color:#9e9e9e; font-size:0.8rem">Hurda</span>
+                        <span style="color:#6b6b6b; font-size:0.8rem">Hurda</span>
                     </div>
                     <button class="btn" onclick="repairItem(${item.id})" ${!canAfford ? 'disabled' : ''}>
                         🔨 ONAR (${repairCost}₺) %${Math.round(successChance * 100)}
@@ -2897,7 +3334,7 @@
             `;
         }
 
-        window.repairItem = function(itemId) {
+        window.repairItem = function (itemId) {
             if (gameState.money < 200) return;
             gameState.money -= 200;
 
@@ -2937,7 +3374,7 @@
         };
 
         // --- SKILL SYSTEM ---
-        window.startSkillsPhase = function() {
+        window.startSkillsPhase = function () {
             renderSkills();
         };
 
@@ -2947,11 +3384,11 @@
                 const canUpgrade = currentLvl < skill.maxLevel && gameState.skillPoints >= skill.cost;
 
                 return `
-                <div class="item-row" style="background:rgba(255,255,255,0.05); flex-direction:column; align-items:flex-start; gap:10px;">
+                <div class="item-row" style="background:var(--surface); flex-direction:column; align-items:flex-start; gap:10px;">
                     <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <strong style="font-size:1.1rem; color:var(--accent-color)">${skill.name}</strong>
-                            <span style="font-size:0.8rem; margin-left:10px; background:#333; padding:2px 6px; border-radius:4px;">Lvl ${currentLvl}/${skill.maxLevel}</span>
+                            <span style="font-size:0.8rem; margin-left:10px; background:rgba(232,169,36,0.1); padding:2px 8px; border-radius:4px; color:var(--accent-color);">Lvl ${currentLvl}/${skill.maxLevel}</span>
                         </div>
                         <button class="btn btn-purple" onclick="purchaseSkill('${skill.id}')" ${!canUpgrade ? 'disabled' : ''}>
                             ${currentLvl >= skill.maxLevel ? 'MAX' : `YÜKSELT (${skill.cost} Puan)`}
@@ -2977,7 +3414,7 @@
             `;
         }
 
-        window.purchaseSkill = function(skillId) {
+        window.purchaseSkill = function (skillId) {
             const skill = SKILLS_CONFIG[skillId];
             if (!skill) return;
             const currentLvl = gameState.skills[skillId] || 0;
@@ -2997,7 +3434,7 @@
         };
 
         // --- WAREHOUSE SYSTEM ---
-        window.startWarehousePhase = function() {
+        window.startWarehousePhase = function () {
             renderWarehouse();
         };
 
@@ -3012,7 +3449,7 @@
                     <div style="font-size:0.9rem">
                         <strong>${item.name}</strong> (${rarityInfo.label})
                     </div>
-                    <div style="font-size:0.8rem; color:#aaa;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">
                         ${item.certified ? `Değer: ${item.realValue} ₺` : 'Değer: ???'}
                     </div>
                 </div>
@@ -3047,7 +3484,7 @@
             `;
         }
 
-        window.upgradeStorage = function() {
+        window.upgradeStorage = function () {
             const upgradeCost = 5000 * gameState.storageLevel;
             if (gameState.money >= upgradeCost) {
                 gameState.money -= upgradeCost;
@@ -3059,19 +3496,19 @@
             }
         };
 
-        window.startHubPhase = function() {
+        window.startHubPhase = function () {
             renderHub();
         };
 
         function renderHub() {
-             // Quest Display
-             const questsHtml = gameState.quests.map(q =>
-                 `<div style="font-size:0.85rem; background:rgba(255,255,255,0.05); padding:8px; border-radius:5px; margin-bottom:5px; text-align:left; border-left:3px solid ${q.completed ? 'var(--success-color)' : 'var(--accent-color)'}">
+            // Quest Display
+            const questsHtml = gameState.quests.map(q =>
+                `<div style="font-size:0.85rem; background:var(--surface); padding:10px 12px; border-radius:8px; margin-bottom:6px; text-align:left; border-left:3px solid ${q.completed ? 'var(--success-color)' : 'var(--accent-color)'}">
                     ${q.completed ? '✅' : '📜'} ${q.text} (${q.current}/${q.count})
                  </div>`
-             ).join('');
+            ).join('');
 
-             ui.app.innerHTML = `
+            ui.app.innerHTML = `
                 <div class="screen">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <h2>🏙️ ŞEHİR MERKEZİ</h2>
@@ -3125,7 +3562,7 @@
                             <div>Envanterini yönet.</div>
                         </div>
 
-                        <div class="hub-card" onclick="finishRound()" style="border-color:var(--success-color)">
+                        <div class="hub-card" onclick="finishRound()" style="border-color:var(--success-color); border-width:1px;">
                             <div class="hub-icon">💤</div>
                             <div class="hub-title">Günü Bitir</div>
                             <div>Sonraki tura geç.</div>
@@ -3137,4 +3574,5 @@
 
     </script>
 </body>
+
 </html>
