@@ -71,6 +71,7 @@
             pointer-events: none;
             z-index: 0;
             animation: bgShift 20s ease-in-out infinite alternate;
+            will-change: opacity;
         }
 
         @keyframes bgShift {
@@ -90,8 +91,8 @@
         /* UTILS - GLASSMORPHISM */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 0.5px solid var(--glass-border);
             border-radius: 12px;
             box-shadow: var(--shadow);
@@ -160,7 +161,7 @@
         /* HEADER */
         header {
             background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(24px);
+            backdrop-filter: blur(8px);
             padding: 16px 30px;
             display: flex;
             justify-content: space-between;
@@ -284,8 +285,8 @@
         /* Glass Panel Container for Screens */
         .screen-glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 0.5px solid var(--glass-border);
             border-radius: 16px;
             box-shadow: var(--shadow);
@@ -296,13 +297,11 @@
             from {
                 opacity: 0;
                 transform: translateY(30px);
-                filter: blur(8px);
             }
 
             to {
                 opacity: 1;
                 transform: translateY(0);
-                filter: blur(0);
             }
         }
 
@@ -394,7 +393,7 @@
 
         .storage-card.black-market {
             background: rgba(10, 0, 0, 0.9);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(8px);
             border-color: #8b0000;
             color: #e0e0e0;
             font-weight: 800;
@@ -653,7 +652,7 @@
         .negotiation-desk {
             z-index: 2;
             background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(24px);
+            backdrop-filter: blur(8px);
             padding: 20px;
             border-top: 0.5px solid var(--glass-border);
             display: flex;
@@ -2001,8 +2000,32 @@
             initGame();
         };
 
+        function assignCategoriesToItems() {
+            const categories = {
+                "Elektronik": ["Laptop", "Tablet", "Kuruma Makinesi", "Tarayıcı", "Yazıcı", "Mikrodalga", "Modem", "Oyun Konsolu", "Telefon", "Radyo", "Router", "Hoparlör", "Kulaklık", "Şarj", "Priz", "Kumanda", "Klavye", "Mouse", "Pil", "Disket", "CD", "DVD", "Kaset", "Ev Sinema Sistemi", "Drone", "Robot Süpürge", "Akıllı Buzdolabı", "Akıllı Saat", "Lazer Kesici", "3D Yazıcı", "Projektör", "Mikrofon", "VR Gözlük", "Bilgisayar", "İşlemci", "Tesla", "Sunucu"],
+                "Antika": ["Vazo", "Ayna", "Avize", "Halı", "Kilim", "Tablo", "Sikke", "Mozaik", "Parası", "Kitap", "Pusula", "Gramofon", "Teleskop", "Mikroskop", "Broş", "Kolye", "Bileklik", "Küpe", "Yüzük", "Taç", "Gerdanlık", "Zırh", "Kılıç", "Balta", "Mamut", "Dinozor", "Eskiz", "Bestesi", "Kraliçe", "Kral"],
+                "Giyim": ["Gömlek", "Pantolon", "Terlik", "Ayakkabı", "Çorap", "Gözlük", "Kemer", "Forma"],
+                "Mobilya": ["Masa", "Sandalye", "Koltuk", "Tencere", "Tava", "Bardak", "Tabak", "Çatal", "Bıçak", "Kaşık", "Kavanoz", "Süpürge", "Paspas", "Çerçeve", "Perde"],
+                "Spor": ["Bisiklet", "Kaykay", "Paten", "Raket", "Top", "Olta", "Çadır", "Uyku Tulumu", "Dürbün", "Kamp", "Sırt Çantası", "Bavul"]
+            };
+
+            ITEMS_DB.forEach(item => {
+                let assignedCategory = "Diğer";
+                const itemNameUpper = item.name.toUpperCase();
+
+                for (const [category, keywords] of Object.entries(categories)) {
+                    if (keywords.some(keyword => itemNameUpper.includes(keyword.toUpperCase()))) {
+                        assignedCategory = category;
+                        break;
+                    }
+                }
+                item.category = assignedCategory;
+            });
+        }
+
         function initGame() {
             console.log("Oyun Başlatıldı.");
+            assignCategoriesToItems();
             updateHeader();
             startRound();
         }
@@ -2762,12 +2785,14 @@
 
             let totalValue = 0;
             const itemsToSell = [];
+            const soldItems = [];
 
             gameState.inventory.forEach(item => {
                 if (selectedForBulk.has(item.id)) {
                     // Bulk price is 60% of base estimate (approx realValue * 0.6)
                     totalValue += Math.floor(item.realValue * 0.6);
                     itemsToSell.push(item.id);
+                    soldItems.push(item);
                 }
             });
 
@@ -2775,6 +2800,11 @@
                 gameState.money += totalValue;
                 gameState.inventory = gameState.inventory.filter(i => !selectedForBulk.has(i.id));
                 selectedForBulk.clear();
+
+                soldItems.forEach(item => {
+                    checkQuestProgress(item);
+                });
+
                 updateHeader();
                 renderShop();
             }
@@ -3038,6 +3068,9 @@
             if (gameState.negotiationMemory[negotiationState.item.id]) {
                 delete gameState.negotiationMemory[negotiationState.item.id];
             }
+
+            // Check quest progress
+            checkQuestProgress(negotiationState.item);
 
             // Reputation small boost for easy deal
             changeReputation(1);
