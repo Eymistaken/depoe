@@ -562,6 +562,19 @@
             letter-spacing: 0.5px;
         }
 
+        .category-badge {
+            background: rgba(240, 236, 228, 0.1);
+            color: var(--text-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            margin-left: 5px;
+            vertical-align: middle;
+            letter-spacing: 0.5px;
+            border: 0.5px solid var(--glass-border);
+        }
+
         /* NEGOTIATION SCENE */
         .scene-container {
             display: flex;
@@ -1520,7 +1533,7 @@
         // --- OPPONENTS ---
         const OPPONENTS = [
             { id: 'yilong', name: 'Yilong Ma', avatar: '🚀', wealth: 999999, aggressive: 0.9, patience: 2, desc: 'Teknoloji Milyarderi', color: '#00d2d3' },
-            { id: 'hasan', name: 'Hurdacı Hasan', avatar: '🧢', wealth: 5000, aggressive: 0.3, patience: 5, desc: 'Eski Toprak', color: '#ff9f43' },
+            { id: 'hasan', name: 'Hurdacı Avşar', avatar: '🧢', wealth: 5000, aggressive: 0.3, patience: 5, desc: 'Eski Toprak', color: '#ff9f43' },
             { id: 'daniel', name: 'Jew Daniel', avatar: '💎', wealth: 50000, aggressive: 0.7, patience: 4, desc: 'Kuyumcu', color: '#feca57' },
             { id: 'cilem', name: 'Bitmeyen Çilem', avatar: '🚬', wealth: 2000, aggressive: 0.1, patience: 1, desc: 'Şanssız', color: '#ff6b6b' }
         ];
@@ -1560,7 +1573,8 @@
                     "Üç beş bir şey ateşleriz."
                 ],
                 fold: [
-                    "O paraya kamyon alırım be!",
+                    "O paraya Toros alırım be!",
+                    "O paraya Broadway alırım be!",
                     "Soygun var polis!",
                     "Hadi ordan, teneke bu.",
                     "Kurtarmaz yeğenim, kurtarmaz.",
@@ -1640,6 +1654,13 @@
                 maxLevel: 3,
                 cost: 1,
                 desc: 'Pazarlıkta EO\'nun sabrını daha az tüketirsin.'
+            },
+            categoryScanner: {
+                id: 'categoryScanner',
+                name: 'Gözlemci',
+                maxLevel: 3,
+                cost: 2,
+                desc: 'Depolardaki eşyaların hangi kategoriden olduğunu tahmin etmeni sağlar.'
             },
             restorer: {
                 id: 'restorer',
@@ -1980,7 +2001,8 @@
                 xray: 0,
                 silverTongue: 0,
                 restorer: 0,
-                hoarder: 0
+                hoarder: 0,
+                categoryScanner: 0
             },
             quests: [], // Active quests
             inventoryLimit: 10,
@@ -2203,7 +2225,7 @@
                     }
                 }
 
-                units.push({
+                let unit = {
                     id: i,
                     name: name,
                     risk: riskLevel,
@@ -2213,7 +2235,11 @@
                     description: desc,
                     className: className,
                     soldTo: null // Tracks if AI bought it
-                });
+                };
+
+                // Önceden eşyaları oluşturup saklıyoruz
+                unit.hiddenItems = generateItemsForUnit(unit);
+                units.push(unit);
             }
             return units;
         }
@@ -2637,8 +2663,8 @@
             gameState.currentUnit = unit;
             updateHeader();
 
-            // Generate items
-            const newItems = generateItemsForUnit(unit);
+            // Use pre-generated items
+            const newItems = unit.hiddenItems;
             gameState.inventory.push(...newItems);
 
             // Remove unit from available list? Or mark as sold to player?
@@ -2661,10 +2687,40 @@
                 const startBid = Math.floor((unit.estimatedMin + unit.estimatedMax) / 2 * 0.5);
                 const canAfford = gameState.money >= startBid;
 
+                // Category Scanner Logic
+                let scannerHtml = "";
+                const scannerLevel = gameState.skills.categoryScanner || 0;
+
+                if (scannerLevel > 0 && unit.hiddenItems && unit.hiddenItems.length > 0) {
+                    const categoryCounts = {};
+                    unit.hiddenItems.forEach(item => {
+                        categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
+                    });
+
+                    const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+
+                    if (scannerLevel === 1) {
+                        const topCat = sortedCategories[0][0];
+                        scannerHtml = `<div style="font-size:0.8rem; color:#4ec9a0; margin-top:5px; font-style:italic;">🔎 Sezgi: Bu depoda ağırlıklı olarak ${topCat} olabilir.</div>`;
+                    } else if (scannerLevel === 2) {
+                        const topCat1 = sortedCategories[0][0];
+                        const topCat2 = sortedCategories.length > 1 ? sortedCategories[1][0] : null;
+                        if (topCat2) {
+                            scannerHtml = `<div style="font-size:0.8rem; color:#4ec9a0; margin-top:5px; font-style:italic;">🔎 Sezgi: Ağırlıklı olarak ${topCat1} ve ${topCat2} var gibi görünüyor.</div>`;
+                        } else {
+                            scannerHtml = `<div style="font-size:0.8rem; color:#4ec9a0; margin-top:5px; font-style:italic;">🔎 Sezgi: Bu depoda ağırlıklı olarak ${topCat1} olabilir.</div>`;
+                        }
+                    } else if (scannerLevel >= 3) {
+                        const catString = sortedCategories.map(cat => `${cat[1]} ${cat[0]}`).join(', ');
+                        scannerHtml = `<div style="font-size:0.8rem; color:#4ec9a0; margin-top:5px; font-weight:bold;">🔎 Kesin Analiz: ${catString}.</div>`;
+                    }
+                }
+
                 let cardContent = `
                     <h3>${unit.name}</h3>
                     <p>${unit.description}</p>
                     <div class="risk-badge ${riskClass}">Risk: ${unit.riskLabel}</div>
+                    ${scannerHtml}
                     <div class="unit-price" style="margin-top:auto; font-size:1.1rem; color:var(--text-muted);">
                         Tahmini: <span style="color:var(--accent-color); font-weight:bold;">${unit.estimatedMin} - ${unit.estimatedMax} ₺</span>
                     </div>
@@ -2719,7 +2775,7 @@
                 <div class="item-row rarity-${item.type}">
                     <div>
                         <strong>${item.name}</strong> ${item.certified ? '✅' : ''}<br>
-                        <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span>
+                        <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span> <span class="category-badge">[${item.category}]</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${item.certified
@@ -2838,7 +2894,7 @@
                         <input type="checkbox" onchange="toggleBulkSelection(${item.id})" ${isSelected ? 'checked' : ''}>
                         <div>
                             <strong>${item.name}</strong> ${item.certified ? '<span class="certified-badge">ONAYLI</span>' : ''}<br>
-                            <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span>
+                            <span style="color:${rarityInfo.color}; font-size:0.8rem; opacity:0.9">${rarityInfo.label}</span> <span class="category-badge">[${item.category}]</span>
                         </div>
                     </div>
                     <button class="btn" style="font-size:0.8rem" onclick="initNegotiation(${item.id})">SAT 💰</button>
@@ -3247,8 +3303,8 @@
             gameState.currentUnit = unit;
             updateHeader();
 
-            // Generate items
-            const newItems = generateItemsForUnit(unit);
+            // Use pre-generated items
+            const newItems = unit.hiddenItems;
             gameState.inventory.push(...newItems);
 
             revealItems(newItems);
@@ -3480,7 +3536,7 @@
                 return `
                 <div class="item-row rarity-${item.type}" style="padding:10px;">
                     <div style="font-size:0.9rem">
-                        <strong>${item.name}</strong> (${rarityInfo.label})
+                        <strong>${item.name}</strong> (${rarityInfo.label}) <span class="category-badge">[${item.category}]</span>
                     </div>
                     <div style="font-size:0.8rem; color:var(--text-muted);">
                         ${item.certified ? `Değer: ${item.realValue} ₺` : 'Değer: ???'}
