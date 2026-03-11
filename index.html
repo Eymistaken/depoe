@@ -1014,6 +1014,8 @@
     </main>
 
     <script>
+        let _itemIdCounter = 1;
+
         // --- CONFIG & CONSTANTS ---
         const GAME_CONFIG = {
             startMoney: 2000, // Enough for a low tier unit
@@ -3351,7 +3353,7 @@
                     ...template,
                     realValue: finalValue,
                     eoInterest: Math.random() > 0.8 ? 2 : (Math.random() > 0.5 ? 1 : 0), // 0=None, 1=Mild, 2=High
-                    id: Date.now() + i
+                    id: _itemIdCounter++
                 });
             }
             return items;
