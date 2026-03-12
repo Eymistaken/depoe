@@ -1677,6 +1677,13 @@
                 maxLevel: 5,
                 cost: 1,
                 desc: 'Depo kapasitesini kalıcı olarak +5 artırır.'
+            },
+            psychWarfare: {
+                id: 'psychWarfare',
+                name: 'Psikolojik Baskı',
+                maxLevel: 3,
+                cost: [1, 2, 3],
+                desc: 'İhalede rakiplerin kafalarındaki maksimum fiyat limitini düşürerek onları pes ettirir.'
             }
         };
 
@@ -2004,7 +2011,8 @@
                 silverTongue: 0,
                 restorer: 0,
                 hoarder: 0,
-                categoryScanner: 0
+                categoryScanner: 0,
+                psychWarfare: 0
             },
             quests: [], // Active quests
             dailyQuestsBonusClaimed: false, // New field
@@ -2290,7 +2298,8 @@
                 log: [`İhale başladı! Başlangıç fiyatı: ${startBid} ₺`],
                 playerFolded: false,
                 lastBidTime: Date.now(),
-                lastLogIndex: 0
+                lastLogIndex: 0,
+                psychUsed: false
             };
 
             setupAuctionUI();
@@ -2351,6 +2360,7 @@
                             <button id="btn-bid-50" class="btn" onclick="placePlayerBid(50)">+50 ₺</button>
                             <button id="btn-bid-200" class="btn" onclick="placePlayerBid(200)">+200 ₺</button>
                             <button id="btn-fold" class="btn btn-danger" onclick="playerFold()">ÇEKİL 🏳️</button>
+                            ${gameState.skills.psychWarfare > 0 ? `<button id="btn-psych" class="btn btn-purple" onclick="usePsychWarfare()">🗣️ BIKTIR</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -2424,6 +2434,11 @@
             document.getElementById('btn-bid-200').disabled = !canBid;
             document.getElementById('btn-fold').disabled = (auc.playerFolded || auc.timer >= 3);
 
+            const psychBtn = document.getElementById('btn-psych');
+            if (psychBtn) {
+                psychBtn.disabled = (auc.playerFolded || auc.timer >= 3 || auc.psychUsed);
+            }
+
             // Update Log (Append only)
             const logContainer = document.getElementById('auction-log');
             if (logContainer && auc.lastLogIndex < auc.log.length) {
@@ -2488,6 +2503,57 @@
             }
 
             placeBid('player', nextBid);
+        };
+
+        window.usePsychWarfare = function () {
+            const auc = gameState.auction;
+            if (!auc || auc.psychUsed || auc.timer >= 3 || auc.playerFolded) return;
+
+            const psychLevel = gameState.skills.psychWarfare || 0;
+            if (psychLevel === 0) return;
+
+            // Apply limit reduction
+            let reductionMultiplier = 1;
+            if (psychLevel === 1) reductionMultiplier = 0.85; // 15% reduction
+            else if (psychLevel === 2) reductionMultiplier = 0.70; // 30% reduction
+            else if (psychLevel >= 3) reductionMultiplier = 0.50; // 50% reduction
+
+            auc.participants.forEach(p => {
+                if (!p.isFolded) {
+                    if (!p.perceivedLimit) {
+                         // Initialize if it hasn't been set yet (should not happen usually but just in case)
+                        let estimateAvg = (auc.unit.estimatedMin + auc.unit.estimatedMax) / 2;
+                        p.perceivedLimit = estimateAvg;
+                    }
+                    p.perceivedLimit = Math.floor(p.perceivedLimit * reductionMultiplier);
+                }
+            });
+
+            // Mark as used
+            auc.psychUsed = true;
+
+            // Log the action
+            auc.log.push(`👤 Rakiplere psikolojik baskı uyguladın!`);
+
+            // Show player speech bubble
+            const playerCard = document.getElementById('opponent-card-player');
+            if (playerCard) {
+                // Remove existing bubble if any
+                const existing = playerCard.querySelector('.mini-bubble');
+                if (existing) existing.remove();
+
+                const bubble = document.createElement('div');
+                bubble.className = `mini-bubble bubble-top`; // player is at bottom row, so top bubble
+                bubble.innerText = "Aman be, ne uzattınız! Çöp dolu bura!";
+                playerCard.appendChild(bubble);
+
+                setTimeout(() => {
+                    bubble.style.opacity = '0';
+                    setTimeout(() => bubble.remove(), 300);
+                }, 3000);
+            }
+
+            updateAuctionUI();
         };
 
         window.playerFold = function () {
@@ -3484,7 +3550,13 @@
         function renderSkills() {
             const skillHtml = Object.values(SKILLS_CONFIG).map(skill => {
                 const currentLvl = gameState.skills[skill.id] || 0;
-                const canUpgrade = currentLvl < skill.maxLevel && gameState.skillPoints >= skill.cost;
+
+                let currentCost = 0;
+                if (currentLvl < skill.maxLevel) {
+                    currentCost = Array.isArray(skill.cost) ? skill.cost[currentLvl] : skill.cost;
+                }
+
+                const canUpgrade = currentLvl < skill.maxLevel && gameState.skillPoints >= currentCost;
 
                 return `
                 <div class="item-row" style="background:var(--surface); flex-direction:column; align-items:flex-start; gap:10px;">
@@ -3494,7 +3566,7 @@
                             <span style="font-size:0.8rem; margin-left:10px; background:rgba(232,169,36,0.1); padding:2px 8px; border-radius:4px; color:var(--accent-color);">Lvl ${currentLvl}/${skill.maxLevel}</span>
                         </div>
                         <button class="btn btn-purple" onclick="purchaseSkill('${skill.id}')" ${!canUpgrade ? 'disabled' : ''}>
-                            ${currentLvl >= skill.maxLevel ? 'MAX' : `YÜKSELT (${skill.cost} Puan)`}
+                            ${currentLvl >= skill.maxLevel ? 'MAX' : `YÜKSELT (${currentCost} Puan)`}
                         </button>
                     </div>
                     <p style="margin:0; opacity:0.8; font-size:0.9rem">${skill.desc}</p>
@@ -3522,8 +3594,13 @@
             if (!skill) return;
             const currentLvl = gameState.skills[skillId] || 0;
 
-            if (currentLvl < skill.maxLevel && gameState.skillPoints >= skill.cost) {
-                gameState.skillPoints -= skill.cost;
+            let currentCost = 0;
+            if (currentLvl < skill.maxLevel) {
+                currentCost = Array.isArray(skill.cost) ? skill.cost[currentLvl] : skill.cost;
+            }
+
+            if (currentLvl < skill.maxLevel && gameState.skillPoints >= currentCost) {
+                gameState.skillPoints -= currentCost;
                 gameState.skills[skillId]++;
 
                 // Immediate Effects
