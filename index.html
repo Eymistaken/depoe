@@ -2007,6 +2007,7 @@
                 categoryScanner: 0
             },
             quests: [], // Active quests
+            dailyQuestsBonusClaimed: false, // New field
             inventoryLimit: 10,
             storageLevel: 1
         };
@@ -2103,7 +2104,7 @@
                         count: targetCount,
                         current: 0,
                         rewardMoney: 500 * targetCount * rewardMult,
-                        rewardXp: 100 * targetCount * rewardMult
+                        rewardXp: 200 * targetCount * rewardMult
                     });
                 } else {
                     const cat = categories[Math.floor(Math.random() * categories.length)];
@@ -2116,7 +2117,7 @@
                         count: targetCount,
                         current: 0,
                         rewardMoney: 400 * targetCount,
-                        rewardXp: 80 * targetCount
+                        rewardXp: 160 * targetCount
                     });
                 }
             }
@@ -2142,12 +2143,23 @@
                     }
                 }
             });
+
+            // Check if all quests are completed for the daily bonus
+            if (gameState.quests.length > 0 && gameState.quests.every(q => q.completed) && !gameState.dailyQuestsBonusClaimed) {
+                const bonusXp = 300 * gameState.level;
+                addXp(bonusXp);
+                gameState.dailyQuestsBonusClaimed = true;
+                alert(`🌟 GÜNÜN TÜM GÖREVLERİ TAMAMLANDI! Ekstra ${bonusXp} XP kazandın!`);
+                completedAny = true;
+            }
+
             if (completedAny) updateHeader();
         }
 
         function startRound() {
             gameState.availableUnits = generateStorageUnits();
             generateQuests(); // New quests every round
+            gameState.dailyQuestsBonusClaimed = false; // Reset daily bonus flag
 
             // Determine Patience based on Reputation
             if (gameState.reputation > 70) gameState.eoPatience = 4;
